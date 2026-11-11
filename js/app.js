@@ -19,19 +19,33 @@
   }
   function haptic() { if (navigator.vibrate) navigator.vibrate(15); }
 
-  // Cola de aprendizaje: 4 palabras + 1 frase (rotando categorías)
+  // Cola de aprendizaje.
+  //  - Vida diaria (por defecto): 3 palabras + 2 frases prácticas; vocabulario de manga al final.
+  //  - Manga: 4 palabras + 1 frase, con más expresiones de manga.
+  const FUN = ['romantico', 'ligar', 'gracioso', 'insultos'];
   function buildQueue() {
-    const pattern = S().settings.fun
-      ? ['basicas','romantico','diario','manga','basicas','gracioso','diario','ligar','manga','romantico','basicas','insultos','diario','gracioso','manga','romantico','ligar']
-      : ['basicas','diario','manga'];
+    const { fun, focus = 'vida' } = S().settings;
+    let pattern = focus === 'vida'
+      ? ['patrones','restaurante','basicas','compras','transporte','romantico','patrones','conocer','diario','restaurante',
+         'basicas','emergencias','compras','gracioso','patrones','transporte','conocer','diario','ligar','romantico',
+         'patrones','basicas','restaurante','diario','manga','compras','transporte','insultos']
+      : ['basicas','romantico','diario','manga','basicas','gracioso','diario','ligar','manga','romantico','basicas',
+         'insultos','diario','gracioso','manga','romantico','ligar','patrones','restaurante','conocer'];
+    if (!fun) pattern = pattern.filter((c) => !FUN.includes(c));
+    const perBlock = focus === 'vida' ? [3, 2] : [4, 1];
+    const vocab = focus === 'vida'
+      ? [...VOCAB.filter((v) => v.tag !== 'manga'), ...VOCAB.filter((v) => v.tag === 'manga')]
+      : VOCAB;
     const pools = {};
     PHRASE_CATS.forEach((c) => (pools[c.id] = PHRASES.filter((p) => p.cat === c.id)));
     const q = []; let vi = 0, pi = 0;
-    while (vi < VOCAB.length) {
-      for (let k = 0; k < 4 && vi < VOCAB.length; k++) q.push(VOCAB[vi++].id);
-      for (let tries = 0; tries < pattern.length; tries++) {
-        const pool = pools[pattern[pi++ % pattern.length]];
-        if (pool && pool.length) { q.push(pool.shift().id); break; }
+    while (vi < vocab.length) {
+      for (let k = 0; k < perBlock[0] && vi < vocab.length; k++) q.push(vocab[vi++].id);
+      for (let n = 0; n < perBlock[1]; n++) {
+        for (let tries = 0; tries < pattern.length; tries++) {
+          const pool = pools[pattern[pi++ % pattern.length]];
+          if (pool && pool.length) { q.push(pool.shift().id); break; }
+        }
       }
     }
     Object.values(pools).forEach((pool) => pool.forEach((p) => q.push(p.id)));
@@ -617,12 +631,36 @@
           <input type="checkbox" class="switch" id="s-romaji" ${set.romaji ? 'checked' : ''}></label>
         <label class="set"><span>Nuevas por día</span>
           <select id="s-perday">${[3, 5, 7, 10].map((n) => `<option ${set.perDay === n ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+        <label class="set"><span>Enfoque del reto<small>Vida diaria = lo más útil primero</small></span>
+          <select id="s-focus">${[['vida', 'Vida diaria'], ['manga', 'Manga']].map(([v, l]) => `<option value="${v}" ${(set.focus || 'vida') === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
         <label class="set"><span>Frases divertidas en el reto<small>Románticas, de ligar, graciosas…</small></span>
           <input type="checkbox" class="switch" id="s-fun" ${set.fun ? 'checked' : ''}></label>
         <label class="set"><span>Velocidad de voz <small id="rate-v">${set.rate.toFixed(2)}x</small></span>
           <span class="rate-wrap"><input type="range" id="s-rate" min="0.5" max="1.2" step="0.05" value="${set.rate}">${sayBtn('こんにちは、よろしくね', 'say-sm')}</span></label>
         <label class="set"><span>Tema</span>
           <select id="s-theme">${[['auto', 'Automático'], ['light', 'Claro'], ['dark', 'Oscuro']].map(([v, l]) => `<option value="${v}" ${set.theme === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      </div>
+
+      <h3 class="section-title">☁️ Guardar en la nube</h3>
+      <div class="card">
+        ${Sync.code ? `
+          <p class="small"><b>Activada</b> · <span class="sync-st st-${Sync.status.state}">${syncLabel()}</span></p>
+          <p class="muted small">Tu progreso se guarda solo en internet. Para usarlo en otro móvil o recuperarlo, pon este código en "Tengo un código":</p>
+          <div class="code-box">${Sync.code.match(/.{1,4}/g).join('-')}</div>
+          <div class="row-btns">
+            <button class="btn ghost" data-act="copy-code">📋 Copiar</button>
+            <button class="btn ghost" data-act="sync-now">🔄 Sincronizar</button>
+          </div>
+          <button class="link" data-act="sync-off">Desactivar en este móvil</button>` : `
+          <p class="muted small">Guarda tu progreso en internet para no perderlo nunca y usarlo en varios dispositivos. Sin cuentas: solo un código secreto.</p>
+          <div class="row-btns">
+            <button class="btn ghost" data-act="sync-have">Tengo un código</button>
+            <button class="btn primary" data-act="sync-on">Activar</button>
+          </div>
+          <div class="code-form" hidden>
+            <input class="search" id="sync-code" placeholder="xxxx-xxxx-xxxx-xxxx-xxxx" autocapitalize="off" autocomplete="off" spellcheck="false">
+            <button class="btn primary wide" data-act="sync-join">Recuperar mi progreso</button>
+          </div>`}
       </div>
 
       <h3 class="section-title">📱 Instalar en el iPhone</h3>
@@ -653,6 +691,7 @@
     bind('#s-romaji', 'change', (e) => { set.romaji = e.target.checked; Store.save(); applySettings(); });
     bind('#s-perday', 'change', (e) => { set.perDay = +e.target.value; Store.save(); toast('Se aplicará en el próximo reto'); });
     bind('#s-fun', 'change', (e) => { set.fun = e.target.checked; Store.save(); });
+    bind('#s-focus', 'change', (e) => { set.focus = e.target.value; Store.save(); toast('Se aplicará en el próximo reto'); });
     bind('#s-rate', 'input', (e) => { set.rate = +e.target.value; view.querySelector('#rate-v').textContent = set.rate.toFixed(2) + 'x'; Store.save(); });
     bind('#s-theme', 'change', (e) => { set.theme = e.target.value; Store.save(); applySettings(); });
     on('[data-act="export"]', async () => {
@@ -675,12 +714,52 @@
       try { Store.importJSON(await f.text()); applySettings(); toast('Progreso importado ✓'); renderPerfil(); }
       catch (err) { toast('Archivo no válido'); }
     });
+    on('[data-act="sync-on"]', async (e) => {
+      e.target.disabled = true;
+      try { await Sync.enable(); toast('Nube activada ✓'); } catch (err) { toast(err.message); }
+      renderPerfil();
+    });
+    on('[data-act="sync-have"]', () => { view.querySelector('.code-form').hidden = false; view.querySelector('#sync-code').focus(); });
+    on('[data-act="sync-join"]', async (e) => {
+      const val = view.querySelector('#sync-code').value;
+      if (Object.keys(s.srs).length && !confirm('Se sustituirá el progreso de este móvil por el guardado con ese código. ¿Seguir?')) return;
+      e.target.disabled = true;
+      try { await Sync.enable(val); rev = null; quiz = null; applySettings(); toast('Progreso recuperado ✓'); }
+      catch (err) { toast(err.message); }
+      renderPerfil();
+    });
+    on('[data-act="copy-code"]', async () => {
+      try { await navigator.clipboard.writeText(Sync.code); toast('Código copiado ✓'); } catch (e) { toast('No se pudo copiar'); }
+    });
+    on('[data-act="sync-now"]', async () => { await syncNow(); renderPerfil(); });
+    on('[data-act="sync-off"]', () => {
+      if (confirm('Este móvil dejará de guardar en la nube (tus datos siguen allí). ¿Seguir?')) { Sync.disable(); renderPerfil(); }
+    });
     on('[data-act="dayplus"]', () => { s.dayOffset = (s.dayOffset || 0) + 1; Store.save(); rev = null; toast('Simulando +' + s.dayOffset + ' días'); renderPerfil(); });
     on('[data-act="daynow"]', () => { s.dayOffset = 0; Store.save(); rev = null; renderPerfil(); });
     on('[data-act="reset"]', () => {
       if (confirm('¿Seguro? Se borrará TODO tu progreso.')) { Store.reset(); rev = null; quiz = null; applySettings(); toast('Progreso borrado'); renderPerfil(); }
     });
   }
+
+  // ---------- nube ----------
+  function syncLabel() {
+    const st = Sync.status, last = S().sync && S().sync.last;
+    if (st.state === 'syncing') return 'sincronizando…';
+    if (st.state === 'error' || st.state === 'unconfigured') return '⚠️ ' + st.msg;
+    if (!last) return 'pendiente';
+    const min = Math.round((Date.now() - last) / 60000);
+    return '✓ guardado ' + (min < 1 ? 'ahora mismo' : min < 60 ? `hace ${min} min` : `hace ${Math.round(min / 60)} h`);
+  }
+  async function syncNow() {
+    if (!Sync.code) return;
+    const changed = await Sync.pull();
+    if (changed) { rev = null; quiz = null; applySettings(); route(); }
+  }
+  Sync.onChange(() => {
+    const el = document.querySelector('.sync-st');
+    if (el) { el.textContent = syncLabel(); el.className = 'sync-st st-' + Sync.status.state; }
+  });
 
   // ---------- general ----------
   function on(sel, fn) { const el = view.querySelector(sel); if (el) el.addEventListener('click', fn); }
@@ -719,7 +798,7 @@
   }, true);
   matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applySettings);
   // al volver a la app al día siguiente, refrescar
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) route(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { route(); syncNow(); } });
 
   function confetti() {
     const box = document.createElement('div'); box.className = 'confetti';
@@ -743,6 +822,7 @@
   route();
   // Pedir al navegador que no borre nuestros datos
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  syncNow();
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});

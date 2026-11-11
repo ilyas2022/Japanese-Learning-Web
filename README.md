@@ -19,6 +19,12 @@ O sube la carpeta a GitHub e impórtala en vercel.com (se redespliega con cada p
 
 En el iPhone: Safari → URL → Compartir → **Añadir a pantalla de inicio**.
 
+## Guardado en la nube (opcional, gratis)
+El progreso se guarda en el móvil y, si activas la nube, también en Upstash Redis a través de `api/progress.js`.
+1. En Vercel → tu proyecto → **Storage** → **Create Database** → **Upstash for Redis** (plan Free) → conéctala al proyecto.
+2. **Redeploy** (Deployments → ⋯ → Redeploy) para que coja las variables `KV_REST_API_URL` y `KV_REST_API_TOKEN`.
+3. En la app: Perfil → Guardar en la nube → **Activar**. Guarda el código; en otro móvil usa "Tengo un código".
+
 ## Añadir contenido
 - Palabras: `data/vocab.js` · Frases: `data/phrases.js` · Kana: `data/kana.js`
 - Añade siempre **al final** de cada lista (el id depende de la posición; si no, se mezcla el progreso).

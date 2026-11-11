@@ -25,8 +25,19 @@
     }
     return state;
   }
-  function save() {
+  function write() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* sin espacio / modo privado */ }
+  }
+  function save() {
+    state.updatedAt = Date.now();
+    write();
+    if (window.Sync) Sync.schedule();
+  }
+  // Sustituir el estado entero (al bajar de la nube) sin marcarlo como cambio local
+  function replace(obj) {
+    const d = defaults();
+    state = { ...d, ...obj, settings: { ...d.settings, ...(obj.settings || {}) } };
+    write();
   }
 
   // Número de día local (cambia a medianoche en tu zona horaria)
@@ -46,13 +57,17 @@
   function importJSON(text) {
     const parsed = JSON.parse(text);
     if (!parsed || typeof parsed !== 'object' || !parsed.srs) throw new Error('Archivo no válido');
-    localStorage.setItem(KEY, JSON.stringify(parsed));
-    load();
+    const sync = state && state.sync;
+    replace({ ...parsed, sync });
+    save(); // la copia importada pasa a ser la versión más reciente (también en la nube)
   }
-  function reset() { state = defaults(); save(); }
+  function reset() {
+    const sync = state && state.sync; // mantener el código de sincronización
+    state = defaults(); if (sync) state.sync = sync; save();
+  }
 
   window.Store = {
-    load, save, today, logDay, exportJSON, importJSON, reset,
+    load, save, replace, write, today, logDay, exportJSON, importJSON, reset,
     get s() { return state; },
   };
 })();
