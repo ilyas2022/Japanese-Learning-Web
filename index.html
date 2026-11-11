@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Nihongo Diario</title>
+  <meta name="description" content="Aprende japonés: 5 palabras al día, repaso espaciado, hiragana y katakana.">
+  <meta name="theme-color" content="#fbf7f2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="日本語">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main id="view" class="view"></main>
+
+  <nav class="tabbar" aria-label="Secciones">
+    <a href="#/hoy" data-route="hoy"><span class="ti" lang="ja">今</span><span>Hoy</span></a>
+    <a href="#/repaso" data-route="repaso"><span class="ti" lang="ja">復</span><span>Repaso</span><b id="due-badge" class="badge" hidden></b></a>
+    <a href="#/kana" data-route="kana"><span class="ti" lang="ja">あ</span><span>Kana</span></a>
+    <a href="#/frases" data-route="frases"><span class="ti" lang="ja">話</span><span>Frases</span></a>
+    <a href="#/perfil" data-route="perfil"><span class="ti" lang="ja">私</span><span>Perfil</span></a>
+  </nav>
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="data/kana.js"></script>
+  <script src="data/vocab.js"></script>
+  <script src="data/phrases.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/srs.js"></script>
+  <script src="js/speech.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
