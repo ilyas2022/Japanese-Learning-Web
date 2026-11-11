@@ -147,7 +147,9 @@
 
     view.innerHTML = `
       ${header('今日 <span class="h-es">Hoy</span>', `Reto diario · ${learned} aprendidas`, streakPill())}
+      ${safetyBanner(learned)}
       ${body}`;
+    on('[data-act="dismiss-install"]', () => { S().settings.hideInstall = true; Store.save(); renderHoy(); });
 
     on('[data-act="prev"]', () => { d.idx--; Store.save(); renderHoy(); });
     on('[data-act="next"]', () => {
@@ -162,6 +164,25 @@
       quiz = null; Store.save(); renderHoy();
     });
     bindQuiz(d);
+  }
+
+  // Avisos para no perder el progreso
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const isStandalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+  function daysSinceBackup() {
+    const b = S().settings.lastBackup;
+    return b ? Math.floor((Date.now() - b) / 86400000) : null;
+  }
+  function safetyBanner(learned) {
+    if (isIOS && !isStandalone && !S().settings.hideInstall) {
+      return `<div class="banner warn-banner">📲 <b>Instálala para no perder tu progreso.</b> En Safari: Compartir (□↑) → <b>Añadir a pantalla de inicio</b> y usa siempre ese icono. Si no, iOS puede borrar los datos tras 7 días sin abrirla.
+        <button class="link" data-act="dismiss-install">Ya lo sé</button></div>`;
+    }
+    const d = daysSinceBackup();
+    if (learned >= 15 && (d === null || d >= 14)) {
+      return `<a class="banner" href="#/perfil">💾 ${d === null ? 'Aún no has guardado ninguna copia' : `Tu última copia es de hace ${d} días`}. Haz una en Perfil → Copia de seguridad.</a>`;
+    }
+    return '';
   }
 
   function miniRow(it) {
@@ -609,7 +630,8 @@
 
       <h3 class="section-title">Copia de seguridad</h3>
       <div class="card">
-        <p class="muted small">Tu progreso se guarda en este dispositivo. Exporta una copia de vez en cuando.</p>
+        <p class="muted small">Tu progreso se guarda en este dispositivo. Exporta una copia de vez en cuando (guárdala en Archivos, iCloud o mándatela por WhatsApp). Si cambias de móvil o se borra, la importas y sigues donde lo dejaste.</p>
+        <p class="small"><b>Última copia:</b> ${daysSinceBackup() === null ? 'nunca' : daysSinceBackup() === 0 ? 'hoy ✓' : 'hace ' + daysSinceBackup() + ' días'}</p>
         <div class="row-btns">
           <button class="btn ghost" data-act="export">⬇️ Exportar</button>
           <label class="btn ghost">⬆️ Importar<input type="file" id="import" accept="application/json,.json" hidden></label>
@@ -633,13 +655,20 @@
     bind('#s-fun', 'change', (e) => { set.fun = e.target.checked; Store.save(); });
     bind('#s-rate', 'input', (e) => { set.rate = +e.target.value; view.querySelector('#rate-v').textContent = set.rate.toFixed(2) + 'x'; Store.save(); });
     bind('#s-theme', 'change', (e) => { set.theme = e.target.value; Store.save(); applySettings(); });
-    on('[data-act="export"]', () => {
-      const blob = new Blob([Store.exportJSON()], { type: 'application/json' });
+    on('[data-act="export"]', async () => {
+      set.lastBackup = Date.now(); Store.save();
+      const name = `nihongo-diario-${new Date().toISOString().slice(0, 10)}.json`;
+      const file = new File([Store.exportJSON()], name, { type: 'application/json' });
+      // En iPhone: menú Compartir (Guardar en Archivos, WhatsApp, AirDrop…)
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file], title: 'Copia Nihongo Diario' }); toast('Copia guardada ✓'); renderPerfil(); return; }
+        catch (e) { if (e.name === 'AbortError') { set.lastBackup = null; Store.save(); return; } }
+      }
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `nihongo-diario-${new Date().toISOString().slice(0, 10)}.json`;
+      a.href = URL.createObjectURL(file); a.download = name;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      toast('Copia descargada ✓'); renderPerfil();
     });
     bind('#import', 'change', async (e) => {
       const f = e.target.files[0]; if (!f) return;
@@ -712,6 +741,8 @@
 
   applySettings();
   route();
+  // Pedir al navegador que no borre nuestros datos
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});

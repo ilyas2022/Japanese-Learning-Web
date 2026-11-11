@@ -1,5 +1,5 @@
 // Service worker: funciona offline. Sube VERSION cada vez que cambies archivos.
-const VERSION = 'nihongo-v2';
+const VERSION = 'nihongo-v3';
 const ASSETS = [
   './', 'index.html', 'css/styles.css', 'manifest.webmanifest',
   'data/kana.js', 'data/vocab.js', 'data/phrases.js',

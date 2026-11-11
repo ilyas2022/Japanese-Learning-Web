@@ -251,6 +251,262 @@ window.VOCAB_RAW = [
   ['古い','ふるい','furui','viejo (cosas)','adjetivo','古い家','furui ie','casa vieja'],
   ['悪い','わるい','warui','malo','adjetivo','悪い人','warui hito','mala persona'],
   ['王','おう','ou','rey','manga','海賊王に俺はなる！','kaizoku ou ni ore wa naru!','¡Seré el rey de los piratas!'],
+
+  // ===== Ampliación 2: +200 palabras =====
+  ['よかった','よかった','yokatta','¡menos mal! / qué bien','básico','よかった！','yokatta!','¡Menos mal!'],
+  ['嘘','うそ','uso','mentira','básico','嘘でしょ！','uso desho!','¡No me lo creo!'],
+  ['ねえ','ねえ','nee','oye','básico','ねえ、聞いて。','nee, kiite.','Oye, escucha.'],
+  ['ほら','ほら','hora','¡mira! / ¿ves?','básico','ほら、見て！','hora, mite!','¡Mira!'],
+
+  ['考える','かんがえる','kangaeru','pensar / reflexionar','verbo','ちょっと考える。','chotto kangaeru.','Déjame pensarlo.'],
+  ['探す','さがす','sagasu','buscar','verbo','何を探してるの？','nani wo sagashiteru no?','¿Qué buscas?'],
+  ['見つける','みつける','mitsukeru','encontrar','verbo','見つけた！','mitsuketa!','¡Lo encontré!'],
+  ['違う','ちがう','chigau','ser diferente / no es así','verbo','違う！','chigau!','¡No es eso!'],
+
+  ['ずっと','ずっと','zutto','siempre / todo el rato','adverbio','ずっと待ってた。','zutto matteta.','Te he estado esperando todo el rato.'],
+  ['やっぱり','やっぱり','yappari','como pensaba / al final','adverbio','やっぱり君だ。','yappari kimi da.','Sabía que eras tú.'],
+  ['きっと','きっと','kitto','seguro (que)','adverbio','きっと大丈夫。','kitto daijoubu.','Seguro que todo va bien.'],
+  ['もっと','もっと','motto','más','adverbio','もっと食べて。','motto tabete.','Come más.'],
+
+  ['幸せ','しあわせ','shiawase','felicidad / feliz','sentimiento','君といると幸せ。','kimi to iru to shiawase.','Soy feliz contigo.'],
+  ['笑顔','えがお','egao','sonrisa','sentimiento','笑顔が素敵。','egao ga suteki.','Tienes una sonrisa preciosa.'],
+  ['大切','たいせつ','taisetsu','importante / querido','adjetivo','君は大切な人だ。','kimi wa taisetsu na hito da.','Eres alguien importante para mí.'],
+  ['特別','とくべつ','tokubetsu','especial','adjetivo','君は特別だ。','kimi wa tokubetsu da.','Eres especial.'],
+
+  ['最高','さいこう','saikou','lo mejor / genial','adjetivo','最高！','saikou!','¡Lo mejor!'],
+  ['最悪','さいあく','saiaku','lo peor','adjetivo','最悪…','saiaku...','Lo peor…'],
+  ['無理','むり','muri','imposible / ni de coña','adjetivo','無理！','muri!','¡Imposible!'],
+  ['冗談','じょうだん','joudan','broma','cosa','冗談だよ。','joudan da yo.','Es broma.'],
+
+  ['自分','じぶん','jibun','uno mismo','pronombre','自分を信じろ。','jibun wo shinjiro.','Cree en ti mismo.'],
+  ['みんな','みんな','minna','todos','pronombre','みんな、ありがとう！','minna, arigatou!','¡Gracias a todos!'],
+  ['誰か','だれか','dareka','alguien','pronombre','誰か助けて！','dareka tasukete!','¡Que alguien me ayude!'],
+  ['何か','なにか','nanika','algo','pronombre','何か食べたい。','nanika tabetai.','Quiero comer algo.'],
+
+  ['おい','おい','oi','¡eh, tú!','manga','おい、待て！','oi, mate!','¡Eh, espera!'],
+  ['本気','ほんき','honki','en serio / con todo','manga','本気で行くぞ！','honki de iku zo!','¡Voy en serio!'],
+  ['諦める','あきらめる','akirameru','rendirse','manga','諦めるな！','akirameru na!','¡No te rindas!'],
+  ['倒す','たおす','taosu','derribar / derrotar','manga','あいつを倒す！','aitsu wo taosu!','¡Lo derrotaré!'],
+
+  ['仕事','しごと','shigoto','trabajo','cosa','仕事が終わった。','shigoto ga owatta.','He terminado de trabajar.'],
+  ['休み','やすみ','yasumi','descanso / día libre','tiempo','明日は休み。','ashita wa yasumi.','Mañana libro.'],
+  ['週末','しゅうまつ','shuumatsu','fin de semana','tiempo','週末、何する？','shuumatsu, nani suru?','¿Qué haces el finde?'],
+  ['暇','ひま','hima','tener tiempo libre','adjetivo','今暇？','ima hima?','¿Estás libre ahora?'],
+
+  ['恥ずかしい','はずかしい','hazukashii','qué vergüenza','sentimiento','恥ずかしい！','hazukashii!','¡Qué vergüenza!'],
+  ['羨ましい','うらやましい','urayamashii','qué envidia','sentimiento','羨ましい！','urayamashii!','¡Qué envidia!'],
+  ['懐かしい','なつかしい','natsukashii','qué nostalgia','sentimiento','懐かしいね。','natsukashii ne.','Qué recuerdos.'],
+  ['素敵','すてき','suteki','precioso / encantador','adjetivo','素敵な笑顔','suteki na egao','una sonrisa preciosa'],
+
+  ['頼む','たのむ','tanomu','pedir / rogar','verbo','頼む！','tanomu!','¡Te lo ruego!'],
+  ['許す','ゆるす','yurusu','perdonar','verbo','許さない！','yurusanai!','¡No te lo perdonaré!'],
+  ['気づく','きづく','kizuku','darse cuenta','verbo','気づかなかった。','kizukanakatta.','No me di cuenta.'],
+  ['決める','きめる','kimeru','decidir','verbo','もう決めた。','mou kimeta.','Ya lo he decidido.'],
+
+  ['肉','にく','niku','carne','comida','肉が食べたい！','niku ga tabetai!','¡Quiero carne!'],
+  ['魚','さかな','sakana','pescado','comida','魚が好き。','sakana ga suki.','Me gusta el pescado.'],
+  ['野菜','やさい','yasai','verdura','comida','野菜を食べなさい。','yasai wo tabenasai.','Cómete la verdura.'],
+  ['お菓子','おかし','okashi','dulces / chuches','comida','お菓子買って！','okashi katte!','¡Cómprame chuches!'],
+
+  ['前','まえ','mae','delante / antes','lugar','駅の前で会おう。','eki no mae de aou.','Quedamos delante de la estación.'],
+  ['後ろ','うしろ','ushiro','detrás','lugar','後ろ！','ushiro!','¡Detrás de ti!'],
+  ['上','うえ','ue','arriba','lugar','上を見て。','ue wo mite.','Mira arriba.'],
+  ['下','した','shita','abajo','lugar','下に行く。','shita ni iku.','Bajo.'],
+
+  ['どれ','どれ','dore','cuál','pregunta','どれがいい？','dore ga ii?','¿Cuál prefieres?'],
+  ['どんな','どんな','donna','qué tipo de','pregunta','どんな人？','donna hito?','¿Qué tipo de persona es?'],
+  ['どうやって','どうやって','dou yatte','cómo (de qué manera)','pregunta','どうやって行く？','dou yatte iku?','¿Cómo vamos?'],
+  ['なぜ','なぜ','naze','por qué (formal)','pregunta','なぜだ？！','naze da?!','¿¡Por qué!?'],
+
+  ['生きる','いきる','ikiru','vivir','manga','生きろ！','ikiro!','¡Vive!'],
+  ['止める','とめる','tomeru','detener','manga','止めろ！','tomero!','¡Detenlo!'],
+  ['運命','うんめい','unmei','destino','manga','これは運命だ。','kore wa unmei da.','Esto es el destino.'],
+  ['未来','みらい','mirai','futuro','cosa','未来を変える！','mirai wo kaeru!','¡Cambiaré el futuro!'],
+
+  ['怒る','おこる','okoru','enfadarse','verbo','怒ってる？','okotteru?','¿Estás enfadada?'],
+  ['心配','しんぱい','shinpai','preocupación','sentimiento','心配しないで。','shinpai shinaide.','No te preocupes.'],
+  ['驚く','おどろく','odoroku','sorprenderse','verbo','驚いた！','odoroita!','¡Qué sorpresa!'],
+  ['困る','こまる','komaru','estar en apuros','verbo','困ったな…','komatta na...','Vaya lío…'],
+
+  ['付き合う','つきあう','tsukiau','salir (ser pareja)','sentimiento','付き合ってください。','tsukiatte kudasai.','¿Quieres salir conmigo?'],
+  ['告白','こくはく','kokuhaku','declaración de amor','sentimiento','告白された！','kokuhaku sareta!','¡Se me han declarado!'],
+  ['照れる','てれる','tereru','sonrojarse / dar corte','sentimiento','照れるな～','tereru na~','Me da corte~'],
+  ['結婚','けっこん','kekkon','boda / matrimonio','sentimiento','結婚してください。','kekkon shite kudasai.','Cásate conmigo.'],
+
+  ['美しい','うつくしい','utsukushii','hermoso','adjetivo','美しい景色','utsukushii keshiki','un paisaje hermoso'],
+  ['静か','しずか','shizuka','tranquilo / silencioso','adjetivo','静かにして。','shizuka ni shite.','Silencio, por favor.'],
+  ['危ない','あぶない','abunai','¡cuidado! / peligroso','adjetivo','危ない！','abunai!','¡Cuidado!'],
+  ['必要','ひつよう','hitsuyou','necesario','adjetivo','君が必要だ。','kimi ga hitsuyou da.','Te necesito.'],
+
+  ['写真','しゃしん','shashin','foto','cosa','写真を撮って。','shashin wo totte.','Hazme una foto.'],
+  ['映画','えいが','eiga','película','cosa','映画を見に行こう。','eiga wo mi ni ikou.','Vamos a ver una peli.'],
+  ['音楽','おんがく','ongaku','música','cosa','音楽が好き。','ongaku ga suki.','Me gusta la música.'],
+  ['歌','うた','uta','canción','cosa','歌って！','utatte!','¡Canta!'],
+
+  ['一番','いちばん','ichiban','el número uno / lo más','adverbio','一番好き。','ichiban suki.','Es lo que más me gusta.'],
+  ['よく','よく','yoku','bien / a menudo','adverbio','よくできた！','yoku dekita!','¡Muy bien hecho!'],
+  ['全然','ぜんぜん','zenzen','nada / en absoluto','adverbio','全然大丈夫。','zenzen daijoubu.','Para nada, no pasa nada.'],
+  ['すごく','すごく','sugoku','muy / súper','adverbio','すごく楽しい！','sugoku tanoshii!','¡Súper divertido!'],
+
+  ['早い','はやい','hayai','temprano / rápido','adjetivo','早いね！','hayai ne!','¡Qué pronto!'],
+  ['遅い','おそい','osoi','tarde / lento','adjetivo','遅い！','osoi!','¡Llegas tarde!'],
+  ['近い','ちかい','chikai','cerca','adjetivo','駅は近い？','eki wa chikai?','¿La estación está cerca?'],
+  ['遠い','とおい','tooi','lejos','adjetivo','遠いね。','tooi ne.','Está lejos, ¿eh?'],
+
+  ['あいつ','あいつ','aitsu','ese / esa (despectivo)','manga','あいつ、誰？','aitsu, dare?','¿Quién es ese?'],
+  ['奴','やつ','yatsu','tipo / ese tío','manga','あいつはいい奴だ。','aitsu wa ii yatsu da.','Es un buen tío.'],
+  ['神','かみ','kami','dios','manga','神様、お願い！','kamisama, onegai!','¡Dios mío, por favor!'],
+  ['鬼','おに','oni','ogro / demonio japonés','manga','鬼を倒す！','oni wo taosu!','¡Mataré al demonio!'],
+
+  ['意味','いみ','imi','significado','cosa','どういう意味？','dou iu imi?','¿Qué significa?'],
+  ['話','はなし','hanashi','historia / charla','cosa','話がある。','hanashi ga aru.','Tenemos que hablar.'],
+  ['理由','りゆう','riyuu','razón / motivo','cosa','理由は？','riyuu wa?','¿Por qué motivo?'],
+  ['質問','しつもん','shitsumon','pregunta','cosa','質問がある。','shitsumon ga aru.','Tengo una pregunta.'],
+
+  ['あげる','あげる','ageru','dar (a otro)','verbo','これ、あげる。','kore, ageru.','Esto, para ti.'],
+  ['もらう','もらう','morau','recibir','verbo','プレゼントをもらった。','purezento wo moratta.','Me han hecho un regalo.'],
+  ['くれる','くれる','kureru','darme (a mí)','verbo','これくれるの？','kore kureru no?','¿Me lo das?'],
+  ['送る','おくる','okuru','enviar / acompañar','verbo','写真を送って。','shashin wo okutte.','Mándame una foto.'],
+
+  ['赤','あか','aka','rojo','color','赤い糸','akai ito','el hilo rojo (del destino)'],
+  ['青','あお','ao','azul','color','青い空','aoi sora','cielo azul'],
+  ['白','しろ','shiro','blanco','color','白い雪','shiroi yuki','nieve blanca'],
+  ['黒','くろ','kuro','negro','color','黒い猫','kuroi neko','gato negro'],
+
+  ['涙','なみだ','namida','lágrima','sentimiento','涙が止まらない。','namida ga tomaranai.','No paro de llorar.'],
+  ['体','からだ','karada','cuerpo','cuerpo','体に気をつけて。','karada ni ki wo tsukete.','Cuídate.'],
+  ['頭','あたま','atama','cabeza','cuerpo','頭がいい。','atama ga ii.','Es listo.'],
+  ['髪','かみ','kami','pelo','cuerpo','髪、切った？','kami, kitta?','¿Te has cortado el pelo?'],
+
+  ['歩く','あるく','aruku','caminar','verbo','一緒に歩こう。','issho ni arukou.','Caminemos juntos.'],
+  ['座る','すわる','suwaru','sentarse','verbo','ここに座って。','koko ni suwatte.','Siéntate aquí.'],
+  ['立つ','たつ','tatsu','ponerse de pie','verbo','立て！','tate!','¡Levántate!'],
+  ['呼ぶ','よぶ','yobu','llamar (a alguien)','verbo','誰か呼んで！','dareka yonde!','¡Llama a alguien!'],
+
+  ['今度','こんど','kondo','la próxima vez','tiempo','今度一緒に行こう。','kondo issho ni ikou.','La próxima vez vamos juntos.'],
+  ['次','つぎ','tsugi','siguiente','tiempo','次は君の番だ。','tsugi wa kimi no ban da.','Ahora es tu turno.'],
+  ['最後','さいご','saigo','último / final','cosa','最後まで戦う！','saigo made tatakau!','¡Lucharé hasta el final!'],
+  ['最初','さいしょ','saisho','primero / al principio','cosa','最初から','saisho kara','desde el principio'],
+
+  ['同じ','おなじ','onaji','igual / mismo','adjetivo','同じだね。','onaji da ne.','Es lo mismo.'],
+  ['正しい','ただしい','tadashii','correcto','adjetivo','君が正しい。','kimi ga tadashii.','Tienes razón.'],
+  ['ずるい','ずるい','zurui','tramposo / injusto','adjetivo','ずるい！','zurui!','¡Qué injusto!'],
+  ['ひどい','ひどい','hidoi','cruel / horrible','adjetivo','ひどい！','hidoi!','¡Qué cruel!'],
+
+  ['海','うみ','umi','mar / playa','lugar','海に行こう！','umi ni ikou!','¡Vamos a la playa!'],
+  ['山','やま','yama','montaña','lugar','山に登る。','yama ni noboru.','Subo a la montaña.'],
+  ['部屋','へや','heya','habitación','lugar','私の部屋','watashi no heya','mi habitación'],
+  ['町','まち','machi','ciudad / pueblo','lugar','この町が好き。','kono machi ga suki.','Me gusta esta ciudad.'],
+
+  ['魔法','まほう','mahou','magia','manga','魔法を使える。','mahou wo tsukaeru.','Puedo usar magia.'],
+  ['剣','けん','ken','espada','manga','剣を抜け！','ken wo nuke!','¡Desenvaina la espada!'],
+  ['技','わざ','waza','técnica / ataque especial','manga','必殺技！','hissatsu waza!','¡Técnica definitiva!'],
+  ['勝負','しょうぶ','shoubu','duelo / combate','manga','勝負だ！','shoubu da!','¡Combate!'],
+
+  ['乗る','のる','noru','subir (a un vehículo)','verbo','電車に乗る。','densha ni noru.','Cojo el tren.'],
+  ['払う','はらう','harau','pagar','verbo','私が払う。','watashi ga harau.','Pago yo.'],
+  ['遅れる','おくれる','okureru','llegar tarde','verbo','ごめん、遅れる！','gomen, okureru!','¡Perdón, llego tarde!'],
+  ['似合う','にあう','niau','quedar bien (ropa)','verbo','よく似合うね！','yoku niau ne!','¡Te queda genial!'],
+
+  ['電車','でんしゃ','densha','tren','cosa','電車で行く。','densha de iku.','Voy en tren.'],
+  ['車','くるま','kuruma','coche','cosa','車で行こう。','kuruma de ikou.','Vamos en coche.'],
+  ['本','ほん','hon','libro','cosa','この本、面白い。','kono hon, omoshiroi.','Este libro es interesante.'],
+  ['服','ふく','fuku','ropa','cosa','その服、かわいい！','sono fuku, kawaii!','¡Qué ropa tan mona!'],
+
+  ['じゃあ','じゃあ','jaa','entonces / bueno','conector','じゃあ、行こう。','jaa, ikou.','Bueno, vamos.'],
+  ['それで','それで','sorede','y entonces / ¿y qué?','conector','それで？','sorede?','¿Y entonces?'],
+  ['もし','もし','moshi','si (condicional)','conector','もし良かったら…','moshi yokattara...','Si te parece bien…'],
+  ['例えば','たとえば','tatoeba','por ejemplo','conector','例えば？','tatoeba?','¿Por ejemplo?'],
+
+  ['甘い','あまい','amai','dulce','adjetivo','甘いものが好き。','amai mono ga suki.','Me gusta lo dulce.'],
+  ['辛い','からい','karai','picante','adjetivo','辛い！','karai!','¡Pica!'],
+  ['まずい','まずい','mazui','asqueroso / chungo','adjetivo','まずい！','mazui!','¡Qué asco! / ¡Mal asunto!'],
+  ['熱い','あつい','atsui','caliente (cosas)','adjetivo','熱い！','atsui!','¡Quema!'],
+
+  ['天気','てんき','tenki','tiempo (clima)','cosa','いい天気だね。','ii tenki da ne.','Hace buen día.'],
+  ['雨','あめ','ame','lluvia','cosa','雨が降ってる。','ame ga futteru.','Está lloviendo.'],
+  ['花','はな','hana','flor','cosa','花をあげる。','hana wo ageru.','Te regalo flores.'],
+  ['月','つき','tsuki','luna / mes','cosa','月が綺麗ですね。','tsuki ga kirei desu ne.','La luna está preciosa (= te quiero).'],
+
+  ['こっち','こっち','kocchi','por aquí','básico','こっちだよ！','kocchi da yo!','¡Por aquí!'],
+  ['あっち','あっち','acchi','por allí','básico','あっち行け！','acchi ike!','¡Vete por ahí!'],
+  ['いくつ','いくつ','ikutsu','cuántos / qué edad','pregunta','いくつ？','ikutsu?','¿Cuántos años tienes?'],
+  ['何も','なにも','nanimo','nada (con negativo)','pronombre','何もない。','nanimo nai.','No hay nada.'],
+
+  ['長い','ながい','nagai','largo','adjetivo','髪が長い。','kami ga nagai.','Tiene el pelo largo.'],
+  ['短い','みじかい','mijikai','corto','adjetivo','人生は短い。','jinsei wa mijikai.','La vida es corta.'],
+  ['多い','おおい','ooi','muchos','adjetivo','人が多い。','hito ga ooi.','Hay mucha gente.'],
+  ['少ない','すくない','sukunai','pocos','adjetivo','時間が少ない。','jikan ga sukunai.','Queda poco tiempo.'],
+
+  ['血','ち','chi','sangre','manga','血が出てる！','chi ga deteru!','¡Estás sangrando!'],
+  ['悪魔','あくま','akuma','demonio','manga','悪魔の力','akuma no chikara','el poder del demonio'],
+  ['正義','せいぎ','seigi','justicia','manga','正義の味方','seigi no mikata','defensor de la justicia'],
+  ['復讐','ふくしゅう','fukushuu','venganza','manga','復讐してやる。','fukushuu shite yaru.','Me vengaré.'],
+
+  ['女の子','おんなのこ','onna no ko','chica','persona','かわいい女の子','kawaii onna no ko','una chica mona'],
+  ['男の子','おとこのこ','otoko no ko','chico','persona','男の子でしょ！','otoko no ko desho!','¡Eres un chico, ¿no?! (sé valiente)'],
+  ['私たち','わたしたち','watashitachi','nosotros','pronombre','私たちは友達。','watashitachi wa tomodachi.','Somos amigos.'],
+  ['皆さん','みなさん','minasan','todos ustedes','pronombre','皆さん、こんにちは。','minasan, konnichiwa.','Hola a todos.'],
+
+  ['口','くち','kuchi','boca','cuerpo','口を閉じろ。','kuchi wo tojiro.','Cierra la boca.'],
+  ['胸','むね','mune','pecho','cuerpo','胸が痛い。','mune ga itai.','Me duele el pecho (o el corazón).'],
+  ['足','あし','ashi','pie / pierna','cuerpo','足が痛い。','ashi ga itai.','Me duelen los pies.'],
+  ['物','もの','mono','cosa','cosa','欲しい物は？','hoshii mono wa?','¿Qué cosa quieres?'],
+
+  ['着る','きる','kiru','ponerse (ropa)','verbo','何を着る？','nani wo kiru?','¿Qué me pongo?'],
+  ['返す','かえす','kaesu','devolver','verbo','返して！','kaeshite!','¡Devuélvemelo!'],
+  ['貸す','かす','kasu','prestar','verbo','ペン貸して。','pen kashite.','Préstame un boli.'],
+  ['住む','すむ','sumu','residir / vivir en','verbo','どこに住んでる？','doko ni sunderu?','¿Dónde vives?'],
+
+  ['右','みぎ','migi','derecha','lugar','右に曲がって。','migi ni magatte.','Gira a la derecha.'],
+  ['左','ひだり','hidari','izquierda','lugar','左です。','hidari desu.','Es a la izquierda.'],
+  ['中','なか','naka','dentro','lugar','中に入って。','naka ni haitte.','Entra.'],
+  ['外','そと','soto','fuera','lugar','外は寒い。','soto wa samui.','Fuera hace frío.'],
+
+  ['大変','たいへん','taihen','duro / ¡qué fuerte!','adjetivo','大変だね。','taihen da ne.','Qué duro, ¿eh?'],
+  ['偉い','えらい','erai','admirable','adjetivo','偉いね！','erai ne!','¡Bien hecho!'],
+  ['若い','わかい','wakai','joven','adjetivo','若いね。','wakai ne.','Qué joven.'],
+  ['冷たい','つめたい','tsumetai','frío (cosas / persona)','adjetivo','冷たいね。','tsumetai ne.','Qué frío/a eres.'],
+
+  ['今年','ことし','kotoshi','este año','tiempo','今年こそ！','kotoshi koso!','¡Este año sí!'],
+  ['来年','らいねん','rainen','el año que viene','tiempo','来年、日本に行く。','rainen, nihon ni iku.','El año que viene voy a Japón.'],
+  ['時々','ときどき','tokidoki','a veces','tiempo','時々会う。','tokidoki au.','Nos vemos a veces.'],
+  ['昔','むかし','mukashi','antiguamente / érase una vez','tiempo','昔々…','mukashi mukashi...','Érase una vez…'],
+
+  ['誕生日','たんじょうび','tanjoubi','cumpleaños','tiempo','誕生日はいつ？','tanjoubi wa itsu?','¿Cuándo es tu cumple?'],
+  ['分','ふん','fun','minuto','tiempo','五分待って。','gofun matte.','Espera cinco minutos.'],
+  ['千','せん','sen','mil (1.000)','número','千円','sen en','mil yenes'],
+  ['万','まん','man','diez mil (10.000)','número','一万円','ichiman en','diez mil yenes'],
+
+  ['卵','たまご','tamago','huevo','comida','卵かけご飯','tamago kake gohan','arroz con huevo crudo'],
+  ['お酒','おさけ','osake','alcohol / sake','comida','お酒飲める？','osake nomeru?','¿Bebes alcohol?'],
+  ['朝ご飯','あさごはん','asagohan','desayuno','comida','朝ご飯食べた？','asagohan tabeta?','¿Has desayunado?'],
+  ['晩ご飯','ばんごはん','bangohan','cena','comida','晩ご飯、何がいい？','bangohan, nani ga ii?','¿Qué te apetece cenar?'],
+
+  ['過去','かこ','kako','pasado','cosa','過去は忘れろ。','kako wa wasurero.','Olvida el pasado.'],
+  ['場所','ばしょ','basho','lugar / sitio','lugar','いい場所だね。','ii basho da ne.','Qué buen sitio.'],
+  ['事','こと','koto','asunto / cosa (abstracta)','cosa','君の事が好き。','kimi no koto ga suki.','Me gustas (todo de ti).'],
+  ['桜','さくら','sakura','flor de cerezo','cosa','桜が綺麗。','sakura ga kirei.','Los cerezos están preciosos.'],
+
+  ['星','ほし','hoshi','estrella','cosa','星が見える。','hoshi ga mieru.','Se ven las estrellas.'],
+  ['雪','ゆき','yuki','nieve','cosa','雪だ！','yuki da!','¡Nieva!'],
+  ['風','かぜ','kaze','viento','cosa','風が強い。','kaze ga tsuyoi.','Hace mucho viento.'],
+  ['火','ひ','hi','fuego','manga','火を使え！','hi wo tsukae!','¡Usa el fuego!'],
+
+  ['洗う','あらう','arau','lavar','verbo','手を洗って。','te wo aratte.','Lávate las manos.'],
+  ['取る','とる','toru','coger / tomar','verbo','塩を取って。','shio wo totte.','Pásame la sal.'],
+  ['壊す','こわす','kowasu','romper','verbo','壊さないで。','kowasanaide.','No lo rompas.'],
+  ['続ける','つづける','tsuzukeru','continuar','verbo','続けて。','tsuzukete.','Sigue.'],
+
+  ['降りる','おりる','oriru','bajar (de vehículo)','verbo','次で降りる。','tsugi de oriru.','Me bajo en la siguiente.'],
+  ['落ちる','おちる','ochiru','caer','verbo','落ちるな！','ochiru na!','¡No te caigas!'],
+  ['間に合う','まにあう','maniau','llegar a tiempo','verbo','間に合った！','maniatta!','¡Llegué a tiempo!'],
+  ['変わる','かわる','kawaru','cambiar','verbo','君は変わったね。','kimi wa kawatta ne.','Has cambiado.'],
+
+  ['無事','ぶじ','buji','sano y salvo','adjetivo','無事でよかった。','buji de yokatta.','Menos mal que estás bien.'],
+  ['明るい','あかるい','akarui','luminoso / alegre','adjetivo','明るい人','akarui hito','persona alegre'],
+  ['暗い','くらい','kurai','oscuro','adjetivo','暗い！','kurai!','¡Qué oscuro!'],
+  ['色々','いろいろ','iroiro','varios / de todo','adverbio','色々ありがとう。','iroiro arigatou.','Gracias por todo.'],
 ];
 
 window.VOCAB = window.VOCAB_RAW.map((v, i) => ({
