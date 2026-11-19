@@ -27,6 +27,7 @@
     const s = Store.s;
     const c = preview(s.srs[id], g);
     c.due = Store.today() + c.ivl;
+    c.last = Store.today();
     s.srs[id] = c;
     Store.logDay('reviews');
     return c;
@@ -48,6 +49,27 @@
     return (days / 365).toFixed(1) + ' años';
   }
 
+  // Práctica libre: "no me la sabía" → vuelve mañana con intervalo corto. Acertar no cambia el calendario.
+  function miss(id) {
+    const c = Store.s.srs[id]; if (!c) return;
+    const t = Store.today();
+    c.lapses = (c.lapses || 0) + 1; c.ease = Math.max(1.3, c.ease - 0.15);
+    c.ivl = 1; c.reps = Math.min(c.reps, 1); c.due = Math.min(c.due, t + 1); c.last = t;
+    Store.logDay('reviews');
+  }
+
+  // Las más falladas primero (lapsos, facilidad baja, intervalo corto)
+  function weakest() {
+    return Object.entries(Store.s.srs)
+      .sort((a, b) => (b[1].lapses || 0) - (a[1].lapses || 0) || a[1].ease - b[1].ease || a[1].ivl - b[1].ivl)
+      .map(([id]) => id);
+  }
+  function recent(days) {
+    const t = Store.today();
+    return Object.entries(Store.s.srs).filter(([, c]) => (c.added ?? t) >= t - days).map(([id]) => id);
+  }
+  const isHard = (card) => card && (card.lapses || 0) >= 3;
+
   // Nivel de dominio para mostrar
   function level(card) {
     if (!card) return 'nuevo';
@@ -56,5 +78,5 @@
     return 'aprendiendo';
   }
 
-  window.SRS = { addItem, preview, grade, due, label, level };
+  window.SRS = { addItem, preview, grade, due, label, level, miss, weakest, recent, isHard };
 })();

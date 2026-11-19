@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Nihongo Diario</title>
-  <meta name="description" content="Aprende japonés: 5 palabras al día, repaso espaciado, hiragana y katakana.">
+  <meta name="description" content="Aprende japonés útil: frases del día a día, repaso espaciado, números, hiragana y katakana.">
   <meta name="theme-color" content="#fbf7f2">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -21,15 +21,17 @@
   <nav class="tabbar" aria-label="Secciones">
     <a href="#/hoy" data-route="hoy"><span class="ti" lang="ja">今</span><span>Hoy</span></a>
     <a href="#/repaso" data-route="repaso"><span class="ti" lang="ja">復</span><span>Repaso</span><b id="due-badge" class="badge" hidden></b></a>
-    <a href="#/kana" data-route="kana"><span class="ti" lang="ja">あ</span><span>Kana</span></a>
     <a href="#/frases" data-route="frases"><span class="ti" lang="ja">話</span><span>Frases</span></a>
+    <a href="#/numeros" data-route="numeros"><span class="ti" lang="ja">数</span><span>Números</span></a>
+    <a href="#/kana" data-route="kana"><span class="ti" lang="ja">あ</span><span>Kana</span></a>
     <a href="#/perfil" data-route="perfil"><span class="ti" lang="ja">私</span><span>Perfil</span></a>
   </nav>
   <div id="toast" class="toast" role="status"></div>
 
   <script src="data/kana.js"></script>
-  <script src="data/vocab.js"></script>
-  <script src="data/phrases.js"></script>
+  <script src="data/content.js"></script>
+  <script src="data/legacy-map.js"></script>
+  <script src="js/numbers.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/srs.js"></script>
   <script src="js/speech.js"></script>
