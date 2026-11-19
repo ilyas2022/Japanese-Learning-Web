@@ -30,4 +30,15 @@ El progreso se guarda en el móvil y, si activas la nube, también en Upstash Re
 - El id de cada frase es su texto japonés: puedes reordenar o añadir donde quieras, pero **no cambies el japonés** de una frase existente (perdería su progreso).
 - Desglose opcional (6º campo): `'また=otra vez|後で=luego'`, en el orden de la frase.
 - `data/legacy-map.js` traduce el progreso de la versión antigua (ids por posición). No editar.
-- Tras cambiar archivos, sube `VERSION` en `sw.js` (p. ej. `nihongo-v6`) para que el iPhone coja la versión nueva.
+- Tras cambiar archivos, sube `VERSION` en `sw.js` (p. ej. `nihongo-v7`) para que el iPhone coja la versión nueva.
+
+## Repaso espaciado
+`js/fsrs.js` implementa FSRS-6 (el algoritmo de Anki) y `js/srs.js` guarda dos memorias por frase: **reconocer** (leer/oír → español) y **producir** (español → japonés), que se desbloquea cuando ya la reconoces bien.
+
+## Tests
+```
+node --test "tests/*.test.js"
+```
+
+## Plan
+La hoja de ruta, con lo hecho y lo pendiente, está en [PLAN.md](PLAN.md).

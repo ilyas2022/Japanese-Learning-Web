@@ -1,15 +1,17 @@
 // Progreso guardado en localStorage del dispositivo.
-(function () {
+(function (root) {
   const KEY = 'nihongo-diario-v1';
+  const VERSION = 3;
+  const DAY_START_H = 4; // el día de estudio cambia a las 4:00, no a medianoche
 
   const defaults = () => ({
-    v: 2,
-    settings: { romaji: true, perDay: 5, rate: 0.85, theme: 'auto', fun: true, adult: true, reviewMode: 'mix' },
-    srs: {},          // id -> { due, ivl, ease, reps, lapses, added }
-    daily: null,      // { day, ids:[], step:'learn'|'quiz'|'done' }
+    v: VERSION,
+    settings: { romaji: true, perDay: 5, rate: 0.85, theme: 'auto', fun: true, adult: true, reviewMode: 'mix', retention: 0.9 },
+    srs: {},          // id -> { added, r: estado FSRS (reconocer), p: estado FSRS | null (producir) }
+    daily: null,      // { day, ids:[], step:'review'|'learn'|'quiz'|'done' }
     streak: { count: 0, last: null, best: 0 },
     kana: {},         // 'h:あ' -> { c, w, s }
-    log: {},          // day -> { learned, reviews }
+    log: {},          // day -> { learned, reviews, ok, fail }
     nums: {},         // modo de práctica de números -> { ok, n }
     dayOffset: 0,     // solo para pruebas
   });
@@ -17,10 +19,10 @@
   let state;
   function load() {
     try {
-      const raw = localStorage.getItem(KEY);
+      const raw = root.localStorage.getItem(KEY);
       const parsed = raw ? JSON.parse(raw) : null;
       const d = defaults();
-      state = parsed ? { ...d, ...parsed, settings: { ...d.settings, ...(parsed.settings || {}) } } : d;
+      state = parsed ? { ...d, ...parsed, v: parsed.v || 1, settings: { ...d.settings, ...(parsed.settings || {}) } } : d;
     } catch (e) {
       state = defaults();
     }
@@ -28,12 +30,12 @@
     return state;
   }
   function write() {
-    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* sin espacio / modo privado */ }
+    try { root.localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* sin espacio / modo privado */ }
   }
   function save() {
     state.updatedAt = Date.now();
     write();
-    if (window.Sync) Sync.schedule();
+    if (root.Sync) root.Sync.schedule();
   }
   // Sustituir el estado entero (al bajar de la nube) sin marcarlo como cambio local
   function replace(obj) {
@@ -43,11 +45,19 @@
     write();
   }
 
+  function migrate(st) {
+    const from = st.v || 1;
+    if (from >= VERSION) return false;
+    if (from < 2) migrateV1(st);
+    if (from < 3) migrateV2(st);
+    st.v = VERSION;
+    return true;
+  }
+
   // v1 → v2: el contenido pasó de ids por posición (v12, p-basicas-3) a ids por texto japonés.
   // Se conservan las tarjetas que siguen existiendo; las palabras eliminadas se borran.
-  function migrate(st) {
-    if ((st.v || 1) >= 2) return false;
-    const map = window.LEGACY_MAP || {};
+  function migrateV1(st) {
+    const map = root.LEGACY_MAP || {};
     const srs = {}; let kept = 0, dropped = 0;
     Object.entries(st.srs || {}).forEach(([id, c]) => {
       const n = map[id];
@@ -56,22 +66,55 @@
     });
     st.srs = srs; st.daily = null; st.nums = st.nums || {};
     if (st.settings) delete st.settings.focus;
-    st.v = 2;
     if (kept || dropped) st.migrated = { kept, dropped, seen: false };
-    return true;
   }
 
-  // Número de día local (cambia a medianoche en tu zona horaria)
+  // v2 → v3: SM-2 (ivl, ease) → FSRS con memorias separadas de reconocer y producir.
+  // Estabilidad ≈ intervalo; dificultad según la facilidad (ease 2.5 → 5, 1.3 → 9).
+  // Producir arranca con la mitad de estabilidad y repartida en los próximos días para no acumular.
+  function migrateV2(st) {
+    const t = today();
+    const srs = {};
+    Object.entries(st.srs || {}).forEach(([id, c], i) => {
+      if (!c || c.r !== undefined) { srs[id] = c; return; } // ya es v3
+      const ivl = Math.max(0, c.ivl || 0);
+      const d = Math.min(10, Math.max(1, 5 + (2.5 - (c.ease || 2.5)) * 3.33));
+      const evaluated = (c.reps || 0) > 0 || ivl > 0 || c.last != null;
+      const r = {
+        s: evaluated ? Math.max(0.5, ivl) : null, d: evaluated ? +d.toFixed(4) : null,
+        due: c.due ?? t, last: evaluated ? (c.last ?? (c.due != null ? c.due - Math.max(1, ivl) : t)) : null,
+        reps: c.reps || 0, lapses: c.lapses || 0, ivl,
+      };
+      let p = null;
+      if (r.s != null && r.s >= 3) {
+        const ps = Math.max(1, ivl / 2);
+        p = { s: ps, d: +Math.min(10, d + 1).toFixed(4), last: t, due: t + 1 + (i % Math.max(1, Math.round(ps))), reps: 1, lapses: 0, ivl: Math.round(ps) };
+      }
+      srs[id] = { added: c.added ?? t, r, p };
+    });
+    st.srs = srs;
+    // Kana: de "3 aciertos seguidos" a memoria FSRS. Los ya dominados conservan su nivel (7 días).
+    Object.values(st.kana || {}).forEach((k) => {
+      if (!k || k.f || !((k.c || 0) + (k.w || 0))) return;
+      const done = (k.s || 0) >= 3;
+      k.f = { s: done ? 7 : 1, d: done ? 4 : 6, last: t, due: t + (done ? 7 : 1), reps: k.c || 0, lapses: k.w || 0, ivl: done ? 7 : 1 };
+    });
+    st.settings = st.settings || {};
+    st.settings.reviewMode = { jp: 'r', es: 'p' }[st.settings.reviewMode] || st.settings.reviewMode || 'mix';
+    if (st.daily && st.daily.step === 'review') st.daily.step = 'learn';
+  }
+
+  // Número de día local (cambia a las 4:00 en tu zona horaria)
   function today() {
-    const d = new Date();
+    const d = new Date(Date.now() - DAY_START_H * 3600000);
     const local = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
     return Math.floor(local / 86400000) + (state ? state.dayOffset || 0 : 0);
   }
 
   function logDay(field, n = 1) {
     const t = today();
-    state.log[t] = state.log[t] || { learned: 0, reviews: 0 };
-    state.log[t][field] += n;
+    const l = (state.log[t] = state.log[t] || { learned: 0, reviews: 0 });
+    l[field] = (l[field] || 0) + n;
   }
 
   function exportJSON() { return JSON.stringify(state, null, 2); }
@@ -87,8 +130,8 @@
     state = defaults(); if (sync) state.sync = sync; save();
   }
 
-  window.Store = {
-    load, save, replace, write, today, logDay, exportJSON, importJSON, reset,
+  root.Store = {
+    load, save, replace, write, today, logDay, exportJSON, importJSON, reset, migrate,
     get s() { return state; },
   };
-})();
+})(typeof window !== 'undefined' ? window : globalThis);

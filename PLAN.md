@@ -28,30 +28,31 @@ Leyenda: [x] hecho · [ ] pendiente · (🔬) basado en evidencia
 - [x] Avisos para instalar en iOS y para hacer copia de seguridad
 
 ## Fase 0 · Base
-- [ ] Hacer commit de los cambios pendientes (content.js, numbers.js, refactor de app.js)
-- [ ] Crear `tests/` con `node --test` (sin dependencias) para srs/fsrs y romaji→kana
-- [ ] Separar app.js en archivos por vista (`js/views/hoy.js`, `repaso.js`, `numeros.js`, `kana.js`, `frases.js`, `perfil.js`) sin build
+- [x] Hacer commit de los cambios pendientes (content.js, numbers.js, refactor de app.js)
+- [x] Crear `tests/` con `node --test` (sin dependencias): FSRS, SRS, migración y romaji → `node --test "tests/*.test.js"`
+- [ ] Separar app.js en archivos por vista (`js/views/hoy.js`, `repaso.js`, `numeros.js`, `kana.js`, `frases.js`, `perfil.js`) sin build — *aplazado: mejor hacerlo antes de la Fase 3, cuando app.js crezca*
 
-## Fase 1 · Motor de memoria (🔬 espaciado)
-- [ ] `js/fsrs.js`: FSRS (estabilidad, dificultad, probabilidad de recordar), pesos por defecto y retención objetivo del 90 %
-- [ ] Estado v3: cada frase con memoria separada para **reconocer** (JP/audio→ES) y **producir** (ES→JP)
-- [ ] Producir se desbloquea cuando reconocer llega a ≥ 3 días de estabilidad
-- [ ] Migración v2→v3: SM-2 (ivl, ease) → FSRS (S≈ivl, D según ease); producir empieza con S = ivl/2
-- [ ] El día empieza a las 4:00, no a medianoche
-- [ ] Fuzz en los intervalos (±5 %) para que no se acumulen los repasos el mismo día
-- [ ] Límite diario de repasos y nuevas automáticas a 0 si hay más de 60 pendientes
-- [ ] Registrar aciertos y fallos por día (`log[d].ok / fail`) para medir la retención real
-- [ ] Ajuste "retención objetivo" en Perfil (85 / 90 / 95 %)
+## Fase 1 · Motor de memoria (🔬 espaciado) ✅
+- [x] `js/fsrs.js`: FSRS-6 (estabilidad, dificultad, probabilidad de recordar), pesos por defecto oficiales y retención objetivo del 90 %
+- [x] Estado v3: cada frase con memoria separada para **reconocer** (JP/audio→ES) y **producir** (ES→JP)
+- [x] Producir se desbloquea cuando reconocer llega a ≥ 3 días de estabilidad
+- [x] Migración v2→v3: SM-2 (ivl, ease) → FSRS (S≈ivl, D según ease); producir empieza con S = ivl/2, repartido en varios días
+- [x] El día empieza a las 4:00, no a medianoche
+- [x] Fuzz en los intervalos (±5 %) para que no se acumulen los repasos el mismo día
+- [x] Nuevas en pausa si hay más de 60 repasos pendientes (con botón "aprender igualmente")
+- [x] Registrar aciertos y fallos por día (`log[d].ok / fail`) para medir la retención real
+- [x] Ajuste "retención objetivo" en Perfil (85 / 90 / 95 %)
+- [x] Repaso con modos Mixto / 👁️ Reconocer / 🗣️ Producir / 🎧 Oído y etiqueta del tipo de memoria en cada tarjeta
 
-## Fase 2 · Recuperación de verdad (🔬 testing effect, producción)
-- [ ] `js/romaji.js`: conversor romaji→kana (っ, ん, ー, wo/o, wa/ha, ou/oo) con vista previa en kana mientras escribes
-- [ ] Ejercicio "Escribe en japonés" (ES→JP) con corrección tolerante (1 error = "casi", con botón "la tenía bien")
-- [ ] En Repaso, las tarjetas de producir se responden escribiendo; la nota se sugiere sola (fallo → Otra vez; correcto y rápido → Bien/Fácil)
-- [ ] Test de Hoy: al menos 1 ejercicio de producción por frase; opción múltiple solo como primer contacto
-- [ ] Repetir al final de la sesión lo que fallaste (espaciado dentro de la sesión)
-- [ ] Construir frases con fichas de **kana** (usando el desglose `parts` cuando exista)
-- [ ] Kana en FSRS: cada kana es una tarjeta (reconocer y escribir); "dominado" según la estabilidad
-- [ ] La racha cuenta si completas el repaso del día, aunque no hagas nuevas
+## Fase 2 · Recuperación de verdad (🔬 testing effect, producción) ✅
+- [x] `js/romaji.js`: conversor romaji→kana (っ, ん, ー, wo/o, wa/ha, ou/oo, macrones) con vista previa en kana mientras escribes. Acepta las 541 frases escribiendo su romaji
+- [x] Ejercicio "Escribe en japonés" (ES→JP) con corrección tolerante: vocal larga/っ o 1 letra = "casi", con botón "era un despiste"; si fallas pero tu traducción también vale, "mi respuesta también es correcta"
+- [x] En Repaso (y Práctica libre), las tarjetas de producir se responden escribiendo; la nota sugerida se resalta (fallo → Otra vez · casi → Difícil · bien → Bien · bien y rápido → Fácil). Opción "prefiero decirlo en voz alta" y ajuste para desactivar la escritura
+- [x] Test de Hoy en 2 rondas: 👁️ reconocer (opción múltiple) y después 🗣️ producir (escribir o construir) para cada frase
+- [x] Lo fallado vuelve más tarde en la misma sesión (al final en Hoy, a 4 tarjetas en Repaso y Libre)
+- [x] Construir frases con fichas en **japonés** cuando la frase tiene desglose (`parts`); el resto, en romaji
+- [x] Kana en FSRS: cada kana es una tarjeta; "dominado" = estabilidad ≥ 7 días; botón "Repasar pendientes"; los dominados antiguos se conservan
+- [x] La racha cuenta si completas el repaso del día, aunque no hagas nuevas
 
 ## Fase 3 · Escuchar y hablar (🔬 HVPT, shadowing)
 - [ ] Repetir el audio lento/normal y alternar la voz (Kyoko/Otoya) si están disponibles
@@ -68,7 +69,8 @@ Leyenda: [x] hecho · [ ] pendiente · (🔬) basado en evidencia
 - [ ] Romaji gradual: ocultarlo cuando domines el 80 % del hiragana (con opción de verlo tocando)
 
 ## Fase 5 · Motivación y datos
-- [ ] Perfil: retención real de 30 días, previsión de repasos a 7 días y calendario de actividad
+- [x] Perfil: retención real de 30 días (frente al objetivo)
+- [ ] Perfil: previsión de repasos a 7 días y calendario de actividad
 - [ ] Meta diaria en minutos o tarjetas y aviso de "repaso pendiente" al abrir
 - [ ] Sincronización con fusión por tarjeta (gana la más reciente por `t`), no por estado entero
 - [ ] Comprobar que el payload de sync sigue por debajo de 512 KB con el log nuevo
@@ -99,3 +101,5 @@ Leyenda: [x] hecho · [ ] pendiente · (🔬) basado en evidencia
 
 ## Registro de cambios
 - 2026-11-19 · Auditoría, investigación y creación de este plan.
+- 2026-11-19 · Fase 1: FSRS-6, memorias de reconocer/producir, migración v3, día a las 4:00, fuzz, pausa de nuevas, retención real, racha por repaso. Tests de FSRS/SRS/migración. SW `nihongo-v6`.
+- 2026-11-19 · Fase 2: escribir en romaji→kana con corrección tolerante, nota sugerida, test de Hoy en 2 rondas (reconocer → producir), construir con fichas en japonés, kana con FSRS y pendientes. 19 tests. SW `nihongo-v7`.

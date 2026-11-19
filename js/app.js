@@ -103,8 +103,57 @@
     return `<div class="mini-row">${sayBtn(it.kana || it.jp, 'say-sm')}<div class="mini-jp" lang="ja">${esc(it.jp)}<small class="romaji">${esc(it.romaji)}</small></div><div class="mini-es">${esc(it.es)}${extra}</div></div>`;
   }
 
+  // ---------- escribir en japonés (romaji → kana, js/romaji.js) ----------
+  const writeOn = () => S().settings.writeP !== false;
+  const WRITE_MSG = { ok: '✅ ¡Correcto!', near: '🤏 ¡Casi!', ko: '❌ No era eso', skip: '🤔 Sin respuesta', empty: '🤔 Sin respuesta' };
+  function writeBoxHTML(w) {
+    if (!w.t0) w.t0 = Date.now();
+    return `
+      <div class="write">
+        <input id="wr-in" class="write-in" type="text" lang="en" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="done" placeholder="Escribe en romaji (o en kana)…" value="${esc(w.typed || '')}">
+        <div class="write-prev" id="wr-prev" lang="ja" aria-live="polite">${esc(Romaji.toKana(w.typed || '')) || '&nbsp;'}</div>
+        <div class="row-btns"><button class="btn ghost" data-act="wr-skip">No lo sé</button><button class="btn primary" data-act="wr-go">Comprobar</button></div>
+      </div>`;
+  }
+  function writeResultHTML(w) {
+    const c = w.check; const res = c.override ? 'ok' : c.res;
+    const why = c.res === 'near' && !c.override ? (c.why === 'long' ? 'Ojo a las vocales largas y a la っ.' : 'Se te ha escapado una letra.') : '';
+    return `
+      <div class="feedback ${res === 'ok' ? 'ok' : res === 'near' ? 'near' : 'ko'}">${WRITE_MSG[res]}${why ? ` <small>${why}</small>` : ''}</div>
+      ${c.got ? `<div class="write-cmp"><span class="muted small">Tú:</span> <b lang="ja">${esc(c.got)}</b></div>` : ''}
+      ${(c.res === 'near' || c.res === 'ko') && !c.override ? `<button class="link center-link" data-act="wr-ok">${c.res === 'near' ? 'Era un despiste: cuéntala como bien' : 'Mi respuesta también es correcta'}</button>` : ''}`;
+  }
+  // onDone(check) al comprobar · onOverride() si dices que tu respuesta valía
+  function bindWrite(w, it, onDone, rerender, onOverride) {
+    const inp = view.querySelector('#wr-in');
+    if (inp) {
+      const prev = view.querySelector('#wr-prev');
+      try { inp.focus({ preventScroll: true }); } catch (e) { /* sin foco */ }
+      inp.addEventListener('input', () => { w.typed = inp.value; prev.textContent = Romaji.toKana(inp.value) || ' '; });
+      const go = () => {
+        if (!inp.value.trim()) { inp.focus(); return; }
+        w.check = { ...Romaji.check(inp.value, it), ms: Date.now() - w.t0 }; haptic(); onDone(w.check);
+      };
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+      on('[data-act="wr-go"]', go);
+      on('[data-act="wr-skip"]', () => { w.check = { res: 'skip', got: '' }; onDone(w.check); });
+    }
+    on('[data-act="wr-ok"]', () => { w.check.override = true; onOverride && onOverride(); rerender(); });
+  }
+  const writeOk = (w) => !!(w && w.check && (w.check.res === 'ok' || w.check.override));
+  // Nota sugerida tras escribir: fallo → Otra vez · casi → Difícil · bien → Bien (Fácil si fue rápido)
+  function suggestGrade(w, it) {
+    const c = w && w.check; if (!c) return null;
+    if (c.override) return 2;
+    if (c.res === 'ok') return c.ms < 4000 + 250 * [...(it.kana || '')].length ? 3 : 2;
+    return c.res === 'near' ? 1 : 0;
+  }
+
   // ---------- ejercicios (test de Hoy y Construir) ----------
-  const tokens = (it) => it.romaji.replace(/[!?.…,~、。！？]/g, ' ').split(/\s+/).filter(Boolean);
+  // Piezas para construir: palabras en japonés del desglose si lo hay; si no, romaji
+  const kanaTiles = (it) => !!(it.parts && it.parts.length >= 2);
+  const romajiTokens = (it) => it.romaji.replace(/[!?.…,~、。！？]/g, ' ').split(/\s+/).filter(Boolean);
+  const tokens = (it) => (kanaTiles(it) ? it.parts.map(([j]) => j) : romajiTokens(it));
   const canBuild = (it) => !it.jp.includes('〜') && tokens(it).length >= 2 && tokens(it).length <= 8;
 
   function distractors(it, n, key) {
@@ -118,21 +167,27 @@
     }
     return out;
   }
-  function makeExercise(id, only) {
+  // stage 'rec' = reconocer (primer contacto, opción múltiple) · 'prod' = producir (escribir o construir)
+  function makeExercise(id, only, stage = 'rec') {
     const it = ITEMS[id];
-    let types = only ? [only] : ['meaning', 'meaning', 'reverse', 'reverse', ...(canSpeak ? ['listen', 'listen'] : []), ...(canBuild(it) ? ['build', 'build'] : [])];
+    const types = only ? [only] : stage === 'prod'
+      ? [...(writeOn() ? ['write', 'write'] : ['reverse']), ...(canBuild(it) ? ['build'] : [])]
+      : ['meaning', 'meaning', 'reverse', ...(canSpeak ? ['listen', 'listen'] : [])];
     const type = pick(types);
-    const ex = { id, type, answered: false, ok: null, spoken: false };
+    const ex = { id, type, stage, answered: false, ok: null, spoken: false };
     if (type === 'build') {
-      const tk = tokens(it);
-      const extra = sample([...new Set(ITEMS_LIST.filter((x) => x.id !== id).flatMap(tokens))].filter((t) => !tk.includes(t)), Math.min(2, Math.max(1, 8 - tk.length)));
-      ex.tokens = tk; ex.pool = shuffle([...tk, ...extra]); ex.picked = [];
+      const tk = tokens(it); const kt = kanaTiles(it);
+      const others = ITEMS_LIST.filter((x) => x.id !== id && kanaTiles(x) === kt).flatMap(tokens).filter((t) => !t.includes('〜'));
+      const extra = sample([...new Set(others)].filter((t) => !tk.includes(t)), Math.min(2, Math.max(1, 8 - tk.length)));
+      ex.tokens = tk; ex.kana = kt; ex.pool = shuffle([...tk, ...extra]); ex.picked = [];
+    } else if (type === 'write') {
+      ex.w = {};
     } else {
       ex.opts = shuffle([id, ...distractors(it, 3, type === 'reverse' ? 'jp' : 'es')]);
     }
     return ex;
   }
-  const PROMPT = { meaning: '¿Qué significa?', reverse: '¿Cómo se dice en japonés?', listen: 'Escucha: ¿qué significa?', build: 'Ordena las piezas en japonés' };
+  const PROMPT = { meaning: '¿Qué significa?', reverse: '¿Cómo se dice en japonés?', listen: 'Escucha: ¿qué significa?', build: 'Ordena las piezas en japonés', write: 'Escríbelo en japonés (y dilo en voz alta)' };
 
   function exerciseHTML(ex) {
     const it = ITEMS[ex.id];
@@ -143,10 +198,13 @@
 
     if (ex.type === 'build') {
       const placed = ex.picked.map((i) => ex.pool[i]);
+      const lang = ex.kana ? ' lang="ja"' : '';
       answer = `
-        <div class="build-line ${ex.answered ? (ex.ok ? 'ok' : 'ko') : ''}">${placed.length ? ex.picked.map((pi, k) => `<button class="tile in" data-unpick="${k}" ${ex.answered ? 'disabled' : ''}>${esc(ex.pool[pi])}</button>`).join('') : '<span class="muted small">Toca las piezas en orden…</span>'}</div>
-        <div class="tiles">${ex.pool.map((t, i) => `<button class="tile ${ex.picked.includes(i) ? 'used' : ''}" data-tile="${i}" ${ex.picked.includes(i) || ex.answered ? 'disabled' : ''}>${esc(t)}</button>`).join('')}</div>
+        <div class="build-line ${ex.answered ? (ex.ok ? 'ok' : 'ko') : ''}">${placed.length ? ex.picked.map((pi, k) => `<button class="tile in ${ex.kana ? 'tile-ja' : ''}"${lang} data-unpick="${k}" ${ex.answered ? 'disabled' : ''}>${esc(ex.pool[pi])}</button>`).join('') : '<span class="muted small">Toca las piezas en orden…</span>'}</div>
+        <div class="tiles">${ex.pool.map((t, i) => `<button class="tile ${ex.kana ? 'tile-ja' : ''} ${ex.picked.includes(i) ? 'used' : ''}"${lang} data-tile="${i}" ${ex.picked.includes(i) || ex.answered ? 'disabled' : ''}>${esc(t)}</button>`).join('')}</div>
         ${!ex.answered && ex.picked.length ? `<button class="link center-link" data-act="bclear">Borrar</button>` : ''}`;
+    } else if (ex.type === 'write') {
+      answer = ex.answered ? writeResultHTML(ex.w) : writeBoxHTML(ex.w);
     } else {
       answer = `<div class="options">${ex.opts.map((oid) => {
         const o = ITEMS[oid]; let cls = '';
@@ -156,7 +214,7 @@
       }).join('')}</div>`;
     }
     const fb = ex.answered ? `
-      <div class="feedback ${ex.ok ? 'ok' : 'ko'}">${ex.ok ? '✅ ¡Correcto!' : '❌ Casi. Volverá a salir.'}</div>
+      ${ex.type === 'write' ? (ex.ok ? '' : '<p class="muted small center">Volverá a salir al final.</p>') : `<div class="feedback ${ex.ok ? 'ok' : 'ko'}">${ex.ok ? '✅ ¡Correcto!' : '❌ No. Volverá a salir al final.'}</div>`}
       ${ex.ok && ex.type === 'meaning' ? '' : `<div class="card answer-card">${sayBtn(it.kana || it.jp, 'say-sm')}<div><div lang="ja" class="ans-jp">${esc(it.jp)}</div><div class="romaji">${esc(it.romaji)}</div><div class="ans-es">${esc(it.es)}</div></div></div>`}
       <button class="btn primary wide" data-act="exnext">Continuar →</button>` : '';
     return `
@@ -173,6 +231,7 @@
       Speech.speak(it.kana || it.jp);
       onAnswer && onAnswer(ex); rerender();
     };
+    if (ex.type === 'write') bindWrite(ex.w, it, (c) => answered(c.res === 'ok', true), rerender, () => { ex.ok = true; });
     view.querySelectorAll('[data-opt]').forEach((b) => b.addEventListener('click', () => answered(b.dataset.opt === ex.id, b.dataset.opt)));
     view.querySelectorAll('[data-tile]').forEach((b) => b.addEventListener('click', () => {
       ex.picked.push(+b.dataset.tile);
@@ -185,18 +244,26 @@
   }
 
   // ---------- tarjeta de repaso (SRS) — Hoy y Repaso ----------
-  const newSession = (ids) => ({ queue: [...ids], shown: false, done: 0, dir: null, spoken: null });
-  function cardDir(id) {
+  // Cada cola guarda claves 'id|r' (reconocer) o 'id|p' (producir), con calendarios separados.
+  const newSession = (keys) => ({ queue: [...keys], shown: false, done: 0, dir: null, spoken: null });
+  const validKey = (k) => !!(ITEMS[SRS.parse(k).id] && SRS.state(k));
+  const itemOf = (k) => ITEMS[SRS.parse(k).id];
+  function cardDir(k) {
+    if (SRS.parse(k).side === 'p') return 'es';  // producir: ves el español y lo dices en japonés
     const mode = S().settings.reviewMode || 'mix';
-    if (mode === 'audio') return canSpeak ? 'audio' : 'jp';
-    if (mode !== 'mix') return mode;
-    const c = S().srs[id];
-    if (!c || c.ivl < 3) return 'jp';           // recién aprendidas: reconocer
-    const r = Math.random();                     // maduras: sobre todo producir
-    return r < 0.6 ? 'es' : r < 0.85 && canSpeak ? 'audio' : 'jp';
+    if (!canSpeak || mode === 'r') return 'jp';
+    if (mode === 'audio') return 'audio';
+    const c = SRS.state(k);
+    if (!c || c.s == null || c.s < 3) return 'jp'; // recién aprendidas: leer
+    return Math.random() < 0.5 ? 'audio' : 'jp';   // después, la mitad de las veces de oído
+  }
+  // Racha: cuenta el día si terminas el reto o te pones al día con el repaso
+  function markStudied() {
+    const st = S().streak, t = Store.today();
+    if (st.last !== t) { st.count = st.last === t - 1 ? st.count + 1 : 1; st.last = t; st.best = Math.max(st.best || 0, st.count); }
   }
   function frontHTML(it, dir) {
-    if (dir === 'es') return `<div class="card-top">${unitChip(it)}</div><p class="muted small">¿Cómo se dice en japonés? Dilo en voz alta.</p><div class="meaning big">${esc(it.es)}</div>`;
+    if (dir === 'es') return `<div class="card-top">${unitChip(it)}</div><p class="muted small">¿Cómo se dice en japonés? ${writeOn() ? 'Escríbelo y dilo en voz alta.' : 'Dilo en voz alta.'}</p><div class="meaning big">${esc(it.es)}</div>`;
     if (dir === 'audio') return `<div class="card-top">${unitChip(it)}</div><div class="listen-big">${sayBtn(it.kana || it.jp, 'say-xl')}<p class="muted small">Escucha. ¿Qué significa?</p></div>`;
     return `<div class="card-top">${unitChip(it)}${sayBtn(it.kana || it.jp, 'say-lg')}</div>${jpBlock(it)}`;
   }
@@ -207,39 +274,54 @@
     return `<hr class="sep">${main}${partsBlock(it)}${noteBlock(it, 'left')}`;
   }
   function srsCardHTML(sess) {
-    const id = sess.queue[0]; const it = ITEMS[id]; const card = S().srs[id];
-    if (!sess.dir) sess.dir = cardDir(id);
+    const k = sess.queue[0]; const { id, side } = SRS.parse(k); const it = ITEMS[id];
+    if (!sess.dir) sess.dir = cardDir(k);
+    const writing = sess.dir === 'es' && writeOn();
+    if (writing && !sess.w) sess.w = {};
+    const sug = writing ? suggestGrade(sess.w, it) : null;
     return `
       <article class="card center review-card">
-        ${SRS.isHard(card) ? '<span class="hard-badge">⚠️ difícil</span>' : ''}
+        <span class="side-badge side-${side}">${side === 'p' ? '🗣️ producir' : sess.dir === 'audio' ? '🎧 entender' : '👁️ reconocer'}</span>
+        ${SRS.isHard(id) ? '<span class="hard-badge">⚠️ difícil</span>' : ''}
         ${frontHTML(it, sess.dir)}
         ${sess.shown ? backHTML(it, sess.dir) : ''}
       </article>
       ${sess.shown ? `
+        ${writing && sess.w.check ? writeResultHTML(sess.w) : ''}
         <div class="grades">
           ${[['Otra vez', 0, 'g0'], ['Difícil', 1, 'g1'], ['Bien', 2, 'g2'], ['Fácil', 3, 'g3']].map(([l, g, c]) =>
-            `<button class="grade ${c}" data-grade="${g}"><b>${l}</b><small>${g === 0 ? '< 1 min' : SRS.label(SRS.preview(card, g).ivl)}</small></button>`).join('')}
-        </div>` : `<button class="btn primary wide" data-act="show">Mostrar respuesta</button>`}`;
+            `<button class="grade ${c} ${g === sug ? 'sug' : ''}" data-grade="${g}"><b>${l}</b><small>${g === 0 ? 'ahora otra vez' : SRS.label(SRS.preview(k, g).ivl)}</small></button>`).join('')}
+        </div>
+        ${sug != null ? '<p class="muted small center">Resaltada: la nota que sugiere tu respuesta.</p>' : ''}`
+      : writing ? `${writeBoxHTML(sess.w)}<button class="link center-link" data-act="show">Prefiero decirlo en voz alta y mirar</button>`
+      : `<button class="btn primary wide" data-act="show">Mostrar respuesta</button>`}`;
   }
   function bindSrsCard(sess, rerender) {
-    const id = sess.queue[0]; const it = ITEMS[id];
-    if (sess.dir === 'audio' && sess.spoken !== id && !sess.shown) { sess.spoken = id; Speech.speak(it.kana || it.jp); }
-    on('[data-act="show"]', () => { sess.shown = true; rerender(); Speech.speak(it.kana || it.jp); });
+    const k = sess.queue[0]; const it = itemOf(k);
+    if (sess.dir === 'audio' && sess.spoken !== k && !sess.shown) { sess.spoken = k; Speech.speak(it.kana || it.jp); }
+    const reveal = () => { sess.shown = true; rerender(); Speech.speak(it.kana || it.jp); };
+    on('[data-act="show"]', reveal);
+    if (sess.w) bindWrite(sess.w, it, reveal, rerender);
     view.querySelectorAll('[data-grade]').forEach((b) => b.addEventListener('click', () => {
       const g = +b.dataset.grade; const cur = sess.queue.shift();
       SRS.grade(cur, g); haptic();
-      if (g === 0) sess.queue.splice(Math.min(3, sess.queue.length), 0, cur); else sess.done++;
-      sess.shown = false; sess.dir = null; Store.save(); rerender();
+      // Fallada: vuelve más tarde en esta misma sesión (espaciado dentro de la sesión)
+      if (g === 0) sess.queue.splice(Math.min(4, sess.queue.length), 0, cur); else sess.done++;
+      if (!sess.queue.length && !SRS.due().length) markStudied();
+      sess.shown = false; sess.dir = null; sess.w = null; Store.save(); rerender();
     }));
   }
 
   // ---------- HOY ----------
   let quiz = null, hoyRev = null;
+  const BACKLOG_MAX = 60;
   function ensureDaily() {
     const t = Store.today();
     const d = S().daily;
     if (!d || d.day !== t) {
-      S().daily = { day: t, ids: nextNew(S().settings.perDay), step: SRS.due().length ? 'review' : 'learn', idx: 0, round: 1 };
+      const backlog = SRS.due().length;
+      const paused = backlog > BACKLOG_MAX; // con muchos repasos acumulados, primero ponerse al día
+      S().daily = { day: t, ids: paused ? [] : nextNew(S().settings.perDay), paused, step: backlog ? 'review' : 'learn', idx: 0, round: 1 };
       quiz = null; hoyRev = null; Store.save();
     }
     const d2 = S().daily;
@@ -255,7 +337,7 @@
     const learned = learnedIds().length;
     if (d.step === 'review') {
       if (!hoyRev) hoyRev = newSession(SRS.due().slice(0, 20));
-      hoyRev.queue = hoyRev.queue.filter((id) => ITEMS[id] && S().srs[id]);
+      hoyRev.queue = hoyRev.queue.filter(validKey);
       if (!hoyRev.queue.length) { d.step = 'learn'; Store.save(); }
     }
     const due = SRS.due().length;
@@ -267,6 +349,16 @@
         <p class="step-label">Calentamiento: lo que ya sabes · quedan <b>${hoyRev.queue.length}</b></p>
         ${srsCardHTML(hoyRev)}
         <button class="link center-link" data-act="skiprev">Saltar repaso e ir a las nuevas →</button>`;
+    } else if (!d.ids.length && d.step !== 'done' && d.paused) {
+      body = `
+        <div class="card center">
+          <div class="big-emoji">🧘</div><h2>Hoy toca ponerse al día</h2>
+          <p class="muted">Tienes <b>${due}</b> repasos pendientes. Para no olvidar lo que ya sabes, hoy no hay frases nuevas hasta que bajen de ${BACKLOG_MAX}.</p>
+          <div class="stack-btns">
+            ${due ? `<a class="btn primary" href="#/repaso">Repasar (${due})</a>` : ''}
+            <button class="btn ghost" data-act="more">Aprender ${S().settings.perDay} nuevas igualmente</button>
+          </div>
+        </div>`;
     } else if (!d.ids.length && d.step !== 'done') {
       body = `<div class="card center"><div class="big-emoji">🏆</div><h2>¡Has completado la Ruta!</h2><p class="muted">No quedan frases nuevas. Sigue repasando para no olvidarlas.</p><a class="btn primary" href="#/repaso">Ir a repaso</a></div>`;
     } else if (d.step === 'learn') {
@@ -283,10 +375,12 @@
           <button class="btn primary" data-act="next">${last ? 'Hacer el test ✓' : 'Siguiente →'}</button>
         </div>`;
     } else if (d.step === 'quiz') {
-      if (!quiz) quiz = { queue: shuffle(d.ids).map((id) => makeExercise(id)), total: d.ids.length, passed: 0 };
+      // Dos rondas: primero reconocer (opción múltiple), después producir (escribir o construir)
+      if (!quiz) quiz = { queue: [...shuffle(d.ids).map((id) => makeExercise(id, null, 'rec')), ...shuffle(d.ids).map((id) => makeExercise(id, null, 'prod'))], total: d.ids.length * 2, passed: 0 };
       body = `
         <div class="phase"><span class="done">1 · Repaso</span><span class="done">2 · Nuevas</span><span class="on">3 · Test</span></div>
         <div class="quiz-progress"><div style="width:${(quiz.passed / quiz.total) * 100}%"></div></div>
+        <p class="muted small center">${quiz.queue[0].stage === 'prod' ? '🗣️ Ronda 2 · ahora la dices tú' : '👁️ Ronda 1 · reconócela'}</p>
         ${exerciseHTML(quiz.queue[0])}`;
     } else {
       body = `
@@ -339,7 +433,7 @@
       const ex = quiz.queue[0];
       bindExercise(ex, renderHoy, null, () => {
         const cur = quiz.queue.shift();
-        if (!cur.ok) quiz.queue.push(makeExercise(cur.id)); else quiz.passed++;
+        if (!cur.ok) quiz.queue.push(makeExercise(cur.id, null, cur.stage)); else quiz.passed++;
         if (!quiz.queue.length) finishDaily(d);
         renderHoy();
       });
@@ -348,8 +442,7 @@
   function finishDaily(d) {
     d.ids.forEach((id) => SRS.addItem(id, 1));
     Store.logDay('learned', d.ids.length);
-    const st = S().streak, t = Store.today();
-    if (st.last !== t) { st.count = st.last === t - 1 ? st.count + 1 : 1; st.last = t; st.best = Math.max(st.best || 0, st.count); }
+    markStudied();
     d.step = 'done'; quiz = null;
     Store.save();
     confetti();
@@ -410,40 +503,45 @@
 
   // --- del día (SRS)
   function diaBody() {
-    const mode = S().settings.reviewMode || 'mix';
-    if (!rev || rev.day !== Store.today()) rev = { ...newSession(SRS.due()), day: Store.today() };
-    SRS.due().forEach((id) => { if (!rev.queue.includes(id)) rev.queue.push(id); });
-    rev.queue = rev.queue.filter((id) => ITEMS[id] && S().srs[id]);
+    let mode = S().settings.reviewMode || 'mix';
+    if (mode === 'audio' && !canSpeak) mode = 'mix';
+    const side = mode === 'p' ? 'p' : mode === 'mix' ? undefined : 'r';
+    if (!rev || rev.day !== Store.today() || rev.mode !== mode) rev = { ...newSession(SRS.due(side)), day: Store.today(), mode };
+    SRS.due(side).forEach((k) => { if (!rev.queue.includes(k)) rev.queue.push(k); });
+    rev.queue = rev.queue.filter(validKey);
+    const nR = SRS.due('r').length, nP = SRS.due('p').length;
     const modeSwitch = `
       <div class="seg wide small-seg">
-        ${[['mix', 'Mixto'], ['jp', 'JP→ES'], ['es', 'ES→JP'], ...(canSpeak ? [['audio', '🎧 Oído']] : [])].map(([m, l]) =>
+        ${[['mix', 'Mixto'], ['r', `👁️ Reconocer${nR ? ` ${nR}` : ''}`], ['p', `🗣️ Producir${nP ? ` ${nP}` : ''}`], ...(canSpeak ? [['audio', '🎧 Oído']] : [])].map(([m, l]) =>
           `<button class="${mode === m ? 'on' : ''}" data-mode="${m}">${l}</button>`).join('')}
       </div>`;
     if (!rev.queue.length) {
-      const cards = Object.values(S().srs);
-      const next = cards.length ? Math.min(...cards.map((c) => c.due)) - Store.today() : null;
+      const ids = Object.keys(S().srs).filter((id) => ITEMS[id]);
+      const next = ids.length ? Math.min(...ids.map((id) => SRS.item(id).due)) - Store.today() : null;
+      const otherDue = SRS.due().length;
       return `
+        ${otherDue ? modeSwitch : ''}
         <div class="card center">
-          <div class="big-emoji">${cards.length ? '✨' : '🌱'}</div>
-          <h2>${cards.length ? '¡Todo repasado!' : 'Aún no hay nada que repasar'}</h2>
-          <p class="muted">${cards.length
-            ? (rev.done ? `Has repasado ${rev.done} tarjeta${rev.done > 1 ? 's' : ''}. ` : '') + `Próximo repaso: ${next <= 0 ? 'hoy' : 'en ' + SRS.label(next)}.`
+          <div class="big-emoji">${ids.length ? '✨' : '🌱'}</div>
+          <h2>${ids.length ? (otherDue ? 'Nada en este modo' : '¡Todo repasado!') : 'Aún no hay nada que repasar'}</h2>
+          <p class="muted">${ids.length
+            ? (otherDue ? `Quedan <b>${otherDue}</b> en Mixto. ` : (rev.done ? `Has repasado ${rev.done} tarjeta${rev.done > 1 ? 's' : ''}. ` : '') + `Próximo repaso: ${next <= 0 ? 'hoy' : 'en ' + SRS.label(next)}.`)
             : 'Completa el reto de hoy y las frases aparecerán aquí.'}</p>
-          ${cards.length ? `<p class="small">¿Quieres más? Repasar <b>antes</b> de que toque también ayuda:</p>
+          ${ids.length && !otherDue ? `<p class="small">¿Quieres más? Practicar fuera de calendario también ayuda:</p>
             <div class="row-btns"><button class="btn ghost" data-rtab="construir">🧩 Construir</button><button class="btn primary" data-rtab="libre">🔁 Práctica libre</button></div>`
-            : '<a class="btn primary" href="#/hoy">Ir al reto de hoy</a>'}
+            : ids.length ? '' : '<a class="btn primary" href="#/hoy">Ir al reto de hoy</a>'}
         </div>
-        ${cards.length ? myWords() : ''}`;
+        ${ids.length ? myWords() : ''}`;
     }
     return `
       ${modeSwitch}
       <p class="step-label">Quedan <b>${rev.queue.length}</b> · Hechas ${rev.done}</p>
       ${srsCardHTML(rev)}
-      ${mode === 'mix' ? '<p class="muted small center hint">Mixto: las nuevas las reconoces; las que ya sabes, las tienes que <b>decir tú</b> o <b>entender de oído</b>.</p>' : ''}`;
+      ${mode === 'mix' ? '<p class="muted small center hint">Cada frase tiene dos memorias con su propio calendario: <b>reconocer</b> (leer u oír) y <b>producir</b> (decirla tú). Producir se desbloquea cuando ya la reconoces bien.</p>' : ''}`;
   }
   function bindDia() {
     view.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => {
-      S().settings.reviewMode = b.dataset.mode; Store.save(); if (rev) { rev.shown = false; rev.dir = null; } rr();
+      S().settings.reviewMode = b.dataset.mode; Store.save(); rr();
     }));
     if (rev && rev.queue.length) bindSrsCard(rev, rr);
   }
@@ -528,6 +626,10 @@
     const id = libre.queue[0]; const it = ITEMS[id];
     if (!libre.dir) { const r = Math.random(); libre.dir = r < 0.6 ? 'es' : r < 0.8 && canSpeak ? 'audio' : 'jp'; }
     const doneN = libre.total - new Set(libre.queue).size;
+    const writing = libre.dir === 'es' && writeOn();
+    if (writing && !libre.w) libre.w = {};
+    const checked = writing && libre.w.check;
+    const sugOk = checked ? writeOk(libre.w) : null;
     return `
       <div class="quiz-progress"><div style="width:${(doneN / libre.total) * 100}%"></div></div>
       <p class="step-label">${LIBRE_SRC[libre.src] || (UNIT[libre.unit] ? UNIT[libre.unit].icon + ' ' + esc(UNIT[libre.unit].name) : '')} · ${libre.queue.length} restantes</p>
@@ -536,10 +638,13 @@
         ${libre.shown ? backHTML(it, libre.dir) : ''}
       </article>
       ${libre.shown ? `
+        ${checked ? writeResultHTML(libre.w) : ''}
         <div class="row-btns even">
-          <button class="btn ko-btn" data-lres="0">❌ No la sabía</button>
-          <button class="btn ok-btn" data-lres="1">✅ La sabía</button>
-        </div>` : '<button class="btn primary wide" data-act="lshow">Mostrar respuesta</button>'}
+          <button class="btn ko-btn ${sugOk === false ? 'sug' : ''}" data-lres="0">❌ No la sabía</button>
+          <button class="btn ok-btn ${sugOk === true ? 'sug' : ''}" data-lres="1">✅ La sabía</button>
+        </div>`
+      : writing ? `${writeBoxHTML(libre.w)}<button class="link center-link" data-act="lshow">Prefiero decirlo en voz alta y mirar</button>`
+      : '<button class="btn primary wide" data-act="lshow">Mostrar respuesta</button>'}
       <button class="link center-link" data-act="lquit">Terminar sesión</button>`;
   }
   function bindLibre() {
@@ -547,16 +652,19 @@
     view.querySelectorAll('[data-lunit]').forEach((b) => b.addEventListener('click', () => { startLibre('unit', b.dataset.lunit); rr(); }));
     on('[data-act="lnew"]', () => { libre = null; rr(); });
     on('[data-act="lquit"]', () => { libre.queue = []; rr(); });
-    on('[data-act="lretry"]', () => { const m = libre.missed; libre = { ...libre, queue: shuffle(m), total: m.length, known: 0, missed: [], shown: false, dir: null }; rr(); });
+    on('[data-act="lretry"]', () => { const m = libre.missed; libre = { ...libre, queue: shuffle(m), total: m.length, known: 0, missed: [], shown: false, dir: null, w: null }; rr(); });
     if (!libre || !libre.queue.length) return;
     const id = libre.queue[0]; const it = ITEMS[id];
     if (libre.dir === 'audio' && libre.spoken !== id && !libre.shown) { libre.spoken = id; Speech.speak(it.kana || it.jp); }
-    on('[data-act="lshow"]', () => { libre.shown = true; rr(); Speech.speak(it.kana || it.jp); });
+    const reveal = () => { libre.shown = true; rr(); Speech.speak(it.kana || it.jp); };
+    on('[data-act="lshow"]', reveal);
+    if (libre.w) bindWrite(libre.w, it, reveal, rr);
     view.querySelectorAll('[data-lres]').forEach((b) => b.addEventListener('click', () => {
+      libre.w = null;
       const ok = b.dataset.lres === '1'; const cur = libre.queue.shift(); haptic();
       if (ok) { if (!libre.missed.includes(cur)) libre.known++; }
       else {
-        if (!libre.missed.includes(cur)) { libre.missed.push(cur); SRS.miss(cur); Store.save(); }
+        if (!libre.missed.includes(cur)) { libre.missed.push(cur); SRS.miss(SRS.key(cur, libre.dir === 'es' ? 'p' : 'r')); Store.save(); }
         libre.queue.splice(Math.min(4, libre.queue.length), 0, cur); // vuelve en esta sesión
       }
       libre.shown = false; libre.dir = null; rr();
@@ -566,12 +674,12 @@
   // --- mis frases
   const FILTERS = [['all', 'Todas'], ['hard', '⚠️ Difíciles'], ['aprendiendo', 'Aprendiendo'], ['madura', 'Madura'], ['dominada', 'Dominadas']];
   function myWords() {
-    const entries = Object.entries(S().srs).filter(([id]) => ITEMS[id]);
+    const entries = Object.keys(S().srs).filter((id) => ITEMS[id]);
     const t = Store.today();
     const f = revUI.q.toLowerCase();
     const list = entries
-      .map(([id, c]) => ({ it: ITEMS[id], c }))
-      .filter(({ c }) => revUI.filter === 'all' || (revUI.filter === 'hard' ? SRS.isHard(c) : SRS.level(c) === revUI.filter))
+      .map((id) => ({ it: ITEMS[id], c: SRS.item(id) }))
+      .filter(({ c }) => revUI.filter === 'all' || (revUI.filter === 'hard' ? c.hard : c.level === revUI.filter))
       .filter(({ it }) => !f || [it.jp, it.kana, it.romaji, it.es].some((x) => x.toLowerCase().includes(f)))
       .sort((a, b) => a.c.due - b.c.due);
     return `
@@ -579,7 +687,7 @@
       <div class="unit-chips">${FILTERS.map(([k, l]) => `<button class="cat ${revUI.filter === k ? 'on' : ''}" data-wf="${k}">${l}</button>`).join('')}</div>
       <input class="search" id="wsearch" type="search" placeholder="Buscar…" value="${esc(revUI.q)}">
       <div class="mini-list">
-        ${list.length ? list.map(({ it, c }) => miniRow(it, `<small class="lvl lvl-${SRS.level(c)}">${SRS.isHard(c) ? '⚠️ ' : ''}${SRS.level(c)} · ${c.due - t <= 0 ? 'hoy' : SRS.label(c.due - t)}</small>`)).join('') : '<p class="muted center small">Nada por aquí.</p>'}
+        ${list.length ? list.map(({ it, c }) => miniRow(it, `<small class="lvl lvl-${c.level}">${c.hard ? '⚠️ ' : ''}${c.level}${c.hasP ? ' · 🗣️' : ''} · ${c.due - t <= 0 ? 'hoy' : SRS.label(c.due - t)}</small>`)).join('') : '<p class="muted center small">Nada por aquí.</p>'}
       </div>`;
   }
   function bindMyWords() {
@@ -762,11 +870,16 @@
   }
 
   // ---------- KANA ----------
-  const kanaUI = { script: 'h', tab: 'tabla', mode: 'k2r', q: null, sel: null, score: { ok: 0, n: 0 }, detail: null };
+  // Cada kana es una tarjeta FSRS (kana[key].f). "Dominado" = lo recuerdas a más de una semana vista.
+  const KANA_DONE_S = 7;
+  const kanaUI = { script: 'h', tab: 'tabla', mode: 'k2r', q: null, sel: null, score: { ok: 0, n: 0 }, detail: null, dueMode: false };
   function kanaStat(key) { return S().kana[key] || { c: 0, w: 0, s: 0 }; }
+  const kanaMem = (key) => (S().kana[key] || {}).f || null;
+  const kanaDone = (key) => { const f = kanaMem(key); return !!(f && f.s >= KANA_DONE_S); };
+  const kanaDueList = (sc) => allKana(sc).filter((k) => { const f = kanaMem(k.key); return f && f.due <= Store.today(); });
   function kanaClass(key) {
     const k = S().kana[key]; if (!k) return '';
-    return k.s >= 3 ? 'm-done' : k.c + k.w > 0 ? 'm-learn' : '';
+    return kanaDone(key) ? 'm-done' : k.c + k.w > 0 ? 'm-learn' : '';
   }
   function selectedRows() {
     S().kanaSel = S().kanaSel || { h: ['a'], k: ['a'] };
@@ -776,7 +889,7 @@
   function renderKana() {
     const sc = kanaUI.script;
     const all = allKana(sc);
-    const mastered = all.filter((k) => kanaStat(k.key).s >= 3).length;
+    const mastered = all.filter((k) => kanaDone(k.key)).length;
     const tabs = `
       <div class="seg wide">
         <button class="${sc === 'h' ? 'on' : ''}" data-script="h">ひらがな Hiragana</button>
@@ -833,17 +946,19 @@
         <div class="kgrid-label">Con ゛ y ゜ (dakuten)</div>${rows(KANA_ROWS.filter((r) => r.extra))}
         <div class="kgrid-label">Combinaciones (きゃ, しゅ…)</div>${rows(KANA_COMBOS)}
       </div>
-      <div class="legend"><span class="m-learn"></span> practicando <span class="m-done"></span> dominado (3 aciertos seguidos)</div>`;
+      <div class="legend"><span class="m-learn"></span> practicando <span class="m-done"></span> dominado (lo recuerdas a más de una semana vista)</div>`;
   }
 
   function rowMastery(sc, rowId) {
     const ks = allKana(sc).filter((k) => k.row === rowId);
-    return ks.length ? ks.filter((k) => kanaStat(k.key).s >= 3).length / ks.length : 0;
+    return ks.length ? ks.filter((k) => kanaDone(k.key)).length / ks.length : 0;
   }
   function kanaPractice(sc) {
     const sel = selectedRows();
     const allRows = [...KANA_ROWS, ...KANA_COMBOS];
-    const pool = allKana(sc).filter((k) => sel.includes(k.row));
+    const dueList = kanaDueList(sc);
+    if (kanaUI.dueMode && !dueList.length && !(kanaUI.q && kanaUI.q.ans != null)) { kanaUI.dueMode = false; kanaUI.q = null; }
+    const pool = kanaUI.dueMode ? dueList : allKana(sc).filter((k) => sel.includes(k.row));
     if (!kanaUI.q && pool.length) kanaUI.q = newKanaQ(pool, sc);
     const q = kanaUI.q;
     const chips = allRows.map((row) => {
@@ -853,8 +968,10 @@
       return `<button class="rchip ${sel.includes(row.id) ? 'on' : ''} ${p === 1 ? 'full' : ''}" data-row="${row.id}" style="--p:${p * 100}%"><span lang="ja">${label}</span></button>`;
     }).join('');
     return `
+      ${kanaUI.dueMode ? `<div class="tip">🔁 <b>Repasando pendientes</b> · quedan ${dueList.length}. <button class="link" data-act="kdue-off">Volver a mis filas</button></div>`
+        : `${dueList.length ? `<button class="btn primary wide" data-act="kdue">🔁 Repasar ${dueList.length} pendiente${dueList.length > 1 ? 's' : ''} (para no olvidarlos)</button>` : ''}
       <p class="muted small">Elige las filas que quieres practicar:</p>
-      <div class="rchips">${chips}</div>
+      <div class="rchips">${chips}</div>`}
       <div class="seg small-seg">
         <button class="${kanaUI.mode === 'k2r' ? 'on' : ''}" data-kmode="k2r">${sc === 'h' ? 'あ' : 'ア'} → a</button>
         <button class="${kanaUI.mode === 'r2k' ? 'on' : ''}" data-kmode="r2k">a → ${sc === 'h' ? 'あ' : 'ア'}</button>
@@ -877,8 +994,13 @@
       ` : '<p class="muted center">Selecciona al menos una fila.</p>'}`;
   }
   function newKanaQ(pool, sc) {
-    const weighted = [];
-    pool.forEach((k) => { const s = kanaStat(k.key).s; const w = s >= 3 ? 1 : s === 0 ? 4 : 2; for (let i = 0; i < w; i++) weighted.push(k); });
+    // Peso: nuevos y los que más se te están olvidando (baja probabilidad de recordar) salen más
+    const weighted = []; const t = Store.today();
+    pool.forEach((k) => {
+      const f = kanaMem(k.key);
+      const w = !f ? 4 : 1 + Math.round((1 - FSRS.retrievability(t - f.last, f.s)) * 8) + (f.due <= t ? 3 : 0);
+      for (let i = 0; i < w; i++) weighted.push(k);
+    });
     let k = weighted[Math.floor(Math.random() * weighted.length)];
     if (kanaUI.lastKey && k.key === kanaUI.lastKey && pool.length > 1) k = pool.find((x) => x.key !== k.key && Math.random() < 0.5) || pool.find((x) => x.key !== k.key);
     kanaUI.lastKey = k.key;
@@ -934,13 +1056,18 @@
       const ok = q.opts[q.ans].key === q.k.key;
       const st = { ...kanaStat(q.k.key) };
       if (ok) { st.c++; st.s++; } else { st.w++; st.s = 0; }
-      S().kana[q.k.key] = st; Store.save();
+      const t = Store.today(); // memoria FSRS del kana: acierto = Bien, fallo = Otra vez
+      st.f = FSRS.options(st.f || { s: null, d: null }, t, S().settings.retention || 0.9)[ok ? 2 : 0];
+      st.f.due = t + st.f.ivl;
+      S().kana[q.k.key] = st; Store.logDay(ok ? 'ok' : 'fail'); Store.save();
       kanaUI.score.n++; if (ok) kanaUI.score.ok++;
       Speech.speak(q.k.ch); haptic();
       renderKana();
       if (ok) setTimeout(() => { if (kanaUI.q === q) { kanaUI.q = null; renderKana(); } }, 650);
     }));
     on('[data-act="knext"]', () => { kanaUI.q = null; renderKana(); });
+    on('[data-act="kdue"]', () => { kanaUI.dueMode = true; kanaUI.q = null; renderKana(); });
+    on('[data-act="kdue-off"]', () => { kanaUI.dueMode = false; kanaUI.q = null; renderKana(); });
     view.querySelectorAll('[data-ropt]').forEach((b) => b.addEventListener('click', () => {
       const q = kanaUI.q; q.ans = +b.dataset.ropt;
       kanaUI.score.n++; if (q.opts[q.ans].r === q.w.r) kanaUI.score.ok++;
@@ -1008,10 +1135,14 @@
   // ---------- PERFIL ----------
   function renderPerfil() {
     const s = S(), set = s.settings, t = Store.today();
-    const cards = Object.entries(s.srs).filter(([id]) => ITEMS[id]).map(([, c]) => c);
-    const masteredW = cards.filter((c) => c.ivl >= 21).length;
-    const hk = allKana('h').filter((k) => kanaStat(k.key).s >= 3).length;
-    const kk = allKana('k').filter((k) => kanaStat(k.key).s >= 3).length;
+    const cards = Object.keys(s.srs).filter((id) => ITEMS[id]);
+    const masteredW = cards.filter((id) => SRS.item(id).level === 'dominada').length;
+    // Retención real: aciertos / repasos de los últimos 30 días
+    const last30 = [...Array(30)].map((_, i) => s.log[t - i]).filter(Boolean);
+    const okN = last30.reduce((a, l) => a + (l.ok || 0), 0), failN = last30.reduce((a, l) => a + (l.fail || 0), 0);
+    const retPct = okN + failN >= 10 ? Math.round((okN / (okN + failN)) * 100) + '%' : '—';
+    const hk = allKana('h').filter((k) => kanaDone(k.key)).length;
+    const kk = allKana('k').filter((k) => kanaDone(k.key)).length;
     const total = ITEMS_LIST.filter((it) => unitVisible(UNIT[it.unit])).length;
     const ns = numStat();
     const days = [...Array(7)].map((_, i) => t - 6 + i);
@@ -1024,6 +1155,7 @@
         <div class="stat"><b>${cards.length}</b><span>de ${total} aprendidas</span></div>
         <div class="stat"><b>${masteredW}</b><span>dominadas</span></div>
         <div class="stat"><b>${SRS.due().length}</b><span>por repasar</span></div>
+        <div class="stat"><b>${retPct}</b><span>recuerdas (30 días, objetivo ${Math.round((set.retention || 0.9) * 100)}%)</span></div>
         <div class="stat"><b>🔢 ${ns.n ? ns.pct + '%' : '—'}</b><span>números (${ns.n} ejercicios)</span></div>
         <div class="stat"><b lang="ja">あ ${hk} · ア ${kk}</b><span>kana dominados</span></div>
       </div>
@@ -1039,6 +1171,10 @@
           <input type="checkbox" class="switch" id="s-romaji" ${set.romaji ? 'checked' : ''}></label>
         <label class="set"><span>Nuevas por día</span>
           <select id="s-perday">${[3, 5, 7, 10].map((n) => `<option ${set.perDay === n ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+        <label class="set"><span>Retención objetivo<small>Más alta = recuerdas más, pero repasas más a menudo</small></span>
+          <select id="s-ret">${[[0.85, '85 %'], [0.9, '90 % (recomendado)'], [0.95, '95 %']].map(([v, l]) => `<option value="${v}" ${(set.retention || 0.9) === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+        <label class="set"><span>Escribir al producir<small>Escribes en romaji y la app lo corrige. Si lo quitas, solo lo dices y miras.</small></span>
+          <input type="checkbox" class="switch" id="s-write" ${set.writeP !== false ? 'checked' : ''}></label>
         <label class="set"><span>Frases divertidas en el reto<small>Ligar, romántico, slang… (1 de cada 5)</small></span>
           <input type="checkbox" class="switch" id="s-fun" ${set.fun ? 'checked' : ''}></label>
         <label class="set"><span>Contenido +18<small>Picante y palabrotas fuertes (en el reto y la biblioteca)</small></span>
@@ -1099,6 +1235,8 @@
     const resetDaily = () => { const d = s.daily; if (d && d.step === 'learn' && d.idx === 0) s.daily = null; };
     bind('#s-romaji', 'change', (e) => { set.romaji = e.target.checked; Store.save(); applySettings(); });
     bind('#s-perday', 'change', (e) => { set.perDay = +e.target.value; Store.save(); toast('Se aplicará en el próximo reto'); });
+    bind('#s-ret', 'change', (e) => { set.retention = +e.target.value; Store.save(); toast('Se aplica a los próximos repasos'); });
+    bind('#s-write', 'change', (e) => { set.writeP = e.target.checked; Store.save(); resetSessions(); });
     bind('#s-fun', 'change', (e) => { set.fun = e.target.checked; resetDaily(); Store.save(); });
     bind('#s-adult', 'change', (e) => { set.adult = e.target.checked; resetDaily(); Store.save(); });
     bind('#s-rate', 'input', (e) => { set.rate = +e.target.value; view.querySelector('#rate-v').textContent = set.rate.toFixed(2) + 'x'; Store.save(); });
