@@ -1,8 +1,8 @@
 // Service worker: funciona offline. Sube VERSION cada vez que cambies archivos.
-const VERSION = 'nihongo-v10';
+const VERSION = 'nihongo-v11';
 const ASSETS = [
   './', 'index.html', 'css/styles.css', 'manifest.webmanifest',
-  'data/kana.js', 'data/content.js', 'data/legacy-map.js', 'data/renamed.js',
+  'data/kana.js', 'data/content.js',
   'js/storage.js', 'js/romaji.js', 'js/fsrs.js', 'js/srs.js', 'js/numbers.js', 'js/quiz.js', 'js/icons.js', 'js/speech.js', 'js/sync.js', 'js/app.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
 ];

@@ -13,6 +13,9 @@
   const retention = () => (S().settings && S().settings.retention) || 0.9;
 
   const key = (id, side) => id + '|' + side;
+  // Frases solo para entender (data/content.js, 'oir'): su memoria de producir no cuenta ni se repasa
+  const hearOnly = (id) => !!(root.HEAR_ONLY && root.HEAR_ONLY.has(id));
+  const sidesOf = (id, e) => SIDES.filter((sd) => e[sd] && !(sd === 'p' && hearOnly(id)));
   function parse(k) { const i = k.lastIndexOf('|'); return { id: k.slice(0, i), side: k.slice(i + 1) }; }
   function state(k) { const { id, side } = parse(k); const e = S().srs[id]; return (e && e[side]) || null; }
 
@@ -39,6 +42,7 @@
 
   function unlockProduction(id) {
     const e = S().srs[id];
+    if (hearOnly(id)) return false; // solo para entender: nunca se pide decirla
     if (e && !e.p && e.r && e.r.s != null && e.r.s >= UNLOCK_P) { e.p = fresh(today() + 1); return true; }
     return false;
   }
@@ -72,8 +76,8 @@
   // Claves pendientes hoy. side: 'r' | 'p' | undefined (todas)
   function due(side) {
     const t = today(); const out = [];
-    Object.entries(S().srs).forEach(([id, e]) => SIDES.forEach((sd) => {
-      if ((!side || side === sd) && e[sd] && e[sd].due <= t) out.push({ k: key(id, sd), due: e[sd].due });
+    Object.entries(S().srs).forEach(([id, e]) => sidesOf(id, e).forEach((sd) => {
+      if ((!side || side === sd) && e[sd].due <= t) out.push({ k: key(id, sd), due: e[sd].due });
     }));
     return out.sort((a, b) => a.due - b.due || hash(a.k + t) - hash(b.k + t)).map((x) => x.k);
   }
@@ -97,13 +101,14 @@
   // Resumen de una frase: el nivel lo marca la memoria más débil (producir aún bloqueado = como mucho "aprendiendo")
   function item(id) {
     const e = S().srs[id]; if (!e) return null;
-    const sts = SIDES.map((sd) => e[sd]).filter(Boolean);
+    const sides = sidesOf(id, e); const sts = sides.map((sd) => e[sd]);
+    const hasP = sides.includes('p');
     const minS = Math.min(...sts.map((c) => (c.s == null ? 0 : c.s)));
     const lapses = sts.reduce((a, c) => a + (c.lapses || 0), 0);
     return {
       due: Math.min(...sts.map((c) => c.due)),
-      level: e.p ? level({ s: minS }) : (level(e.r) === 'nuevo' ? 'nuevo' : 'aprendiendo'),
-      lapses, hard: lapses >= 3, s: minS, hasP: !!e.p, added: e.added,
+      level: hasP || (hearOnly(id) && e.r.s != null) ? level({ s: minS }) : (level(e.r) === 'nuevo' ? 'nuevo' : 'aprendiendo'),
+      lapses, hard: lapses >= 3, s: minS, hasP, added: e.added, hear: hearOnly(id),
     };
   }
   const isHard = (id) => { const i = item(id); return !!(i && i.hard); };
@@ -117,7 +122,7 @@
   // Las más débiles primero: más fallos y menor probabilidad de recordar
   function weakest() {
     return Object.keys(S().srs)
-      .map((id) => ({ id, i: item(id), R: Math.min(...SIDES.filter((sd) => S().srs[id][sd]).map((sd) => recall(key(id, sd)))) }))
+      .map((id) => ({ id, i: item(id), R: Math.min(...sidesOf(id, S().srs[id]).map((sd) => recall(key(id, sd)))) }))
       .sort((a, b) => b.i.lapses - a.i.lapses || a.R - b.R)
       .map((x) => x.id);
   }
@@ -126,5 +131,5 @@
     return Object.entries(S().srs).filter(([, e]) => (e.added ?? t) >= t - days).map(([id]) => id);
   }
 
-  root.SRS = { key, parse, state, addItem, preview, grade, due, label, level, item, miss, weakest, recent, isHard, recall, unlockProduction, UNLOCK_P };
+  root.SRS = { key, parse, state, hearOnly, addItem, preview, grade, due, label, level, item, miss, weakest, recent, isHard, recall, unlockProduction, UNLOCK_P };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -28,9 +28,10 @@ El progreso se guarda en el móvil y, si activas la nube, también en Upstash Re
 ## Añadir contenido
 - Frases: `data/content.js` (unidades en orden de utilidad) · Kana: `data/kana.js` · Números y temas de práctica: `js/numbers.js`
 - Solo frases completas que se dirían tal cual: nada de plantillas con 〜 ni palabras sueltas (lo comprueba `tests/content.test.js`). El molde se explica en la nota.
-- El id de cada frase es su texto japonés: puedes reordenar o añadir donde quieras, pero **no cambies el japonés** de una frase existente (perdería su progreso).
-- Desglose opcional (6º campo): `'また=otra vez|後で=luego'`, en el orden de la frase.
-- `data/legacy-map.js` traduce el progreso de la versión antigua (ids por posición) y `data/renamed.js` el de las frases que cambiaron de texto en la v4. No editar las entradas existentes; si cambias el japonés de una frase, añade aquí `antiguo → nuevo`.
+- El id de cada frase es su texto japonés: puedes reordenar o añadir donde quieras. Si cambias el japonés o quitas una frase, su progreso se borra al abrir la app (no hay migraciones).
+- Desglose (6º campo): `'また=otra vez|後で=luego'`, en el orden de la frase. **Obligatorio** si el romaji tiene 2 o más palabras, y las piezas juntas tienen que dar la frase (lo comprueba el test). Con él, "Construir" usa fichas en japonés.
+- `'oir'` (7º campo, opcional): frases que te dicen pero no vas a decir tú (いらっしゃいませ, 温めますか？). Solo se practica entenderlas: no tienen memoria de producir ni salen en Construir.
+- Ningún significado en español puede repetirse: si dos frases dicen lo mismo, aclara el matiz entre paréntesis.
 - Tras cambiar archivos, sube `VERSION` en `sw.js` (p. ej. `nihongo-v9`) para que el iPhone coja la versión nueva.
 
 ## Kana

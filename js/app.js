@@ -84,12 +84,15 @@
     return `<div class="parts" title="Desglose palabra a palabra">${it.parts.map(([j, e]) => `<span class="part"><b lang="ja">${esc(j)}</b><small>${esc(e)}</small></span>`).join('')}</div>`;
   }
   function noteBlock(it, cls = '') { return it.note ? `<div class="note ${cls}">${ic('bulb')}<span>${esc(it.note)}</span></div>` : ''; }
+  // Frases que te dicen pero no vas a decir tú: solo se practica entenderlas
+  const hearTag = (it) => (it.hear ? `<p class="hear-tag">${ic('headphones')} Te la dirán: basta con entenderla</p>` : '');
   function fullCard(it) {
     return `
       <article class="card learn-card">
         <div class="card-top">${unitChip(it)}${sayBtn(it.kana || it.jp, 'say-lg')}</div>
         ${jpBlock(it)}
         <div class="meaning">${esc(it.es)}</div>
+        ${hearTag(it)}
         ${partsBlock(it)}
         ${noteBlock(it)}
       </article>`;
@@ -194,7 +197,7 @@
   const kanaTiles = (it) => !!(it.parts && it.parts.length >= 2);
   const romajiTokens = (it) => it.romaji.replace(/[!?.…,~、。！？]/g, ' ').split(/\s+/).filter(Boolean);
   const tokens = (it) => (kanaTiles(it) ? it.parts.map(([j]) => j) : romajiTokens(it));
-  const canBuild = (it) => !it.jp.includes('〜') && tokens(it).length >= 2 && tokens(it).length <= 8;
+  const canBuild = (it) => !it.hear && !it.jp.includes('〜') && tokens(it).length >= 2 && tokens(it).length <= 8;
 
   // Distractores: primero de la misma unidad, y nunca uno que se confunda con la respuesta
   function distractors(it, n, key) {
@@ -370,6 +373,7 @@
   function newQuizExercise(id, stage) {
     const it = ITEMS[id];
     if (stage === 'rec') return makeExercise(id, canSpeak && Math.random() < 0.35 ? 'listen' : 'meaning', 'rec');
+    if (it.hear) return makeExercise(id, canSpeak ? 'listen' : 'meaning', 'rec'); // solo para entender: otra vez de oído
     const short = [...(it.kana || it.jp)].length <= 8;
     return makeExercise(id, writeOn() && short && Math.random() < 0.5 ? 'write' : canBuild(it) ? 'build' : 'reverse', 'prod');
   }
@@ -502,11 +506,10 @@
 
     paint(`
       ${header('今日 <span class="h-es">Hoy</span>', `Reto diario · ${learned} aprendidas`, streakPill())}
-      ${migrationBanner() || safetyBanner(learned)}
+      ${safetyBanner(learned)}
       ${d.ids.length || due ? phaseBar(d) : ''}
       ${body}`);
     on('[data-act="dismiss-install"]', () => { S().settings.hideInstall = true; Store.save(); renderHoy(); });
-    on('[data-act="dismiss-mig"]', () => { S().migrated.seen = true; Store.save(); renderHoy(); });
     view.querySelectorAll('[data-phase]').forEach((b) => b.addEventListener('click', () => {
       const k = b.dataset.phase;
       if (k === d.step) return;
@@ -536,15 +539,6 @@
     confetti();
   }
 
-  function migrationBanner() {
-    const m = S().migrated;
-    if (!m || m.seen) return '';
-    if (m.v === 4) return `<div class="banner warn-banner">${ic('sparkles')} <b>Contenido renovado.</b> Las plantillas con 〜 y las palabras sueltas ahora son frases completas.${m.moved ? ` Tu progreso pasó a las frases nuevas (${m.moved}) y volverán pronto al repaso para afianzarlas.` : ''}${m.dropped ? ` Se ${m.dropped === 1 ? 'quitó 1 palabra suelta poco útil' : `quitaron ${m.dropped} palabras sueltas poco útiles`}.` : ''}
-      <button class="link" data-act="dismiss-mig">Entendido</button></div>`;
-    return `<div class="banner warn-banner">${ic('sparkles')} <b>App renovada.</b> Ahora aprendes frases útiles con su desglose, en vez de palabras sueltas. Se han conservado <b>${m.kept}</b> de tus tarjetas${m.dropped ? ` y se ${m.dropped === 1 ? 'ha quitado 1 palabra suelta poco útil' : `han quitado ${m.dropped} palabras sueltas poco útiles`}` : ''}.
-      <button class="link" data-act="dismiss-mig">Entendido</button></div>`;
-  }
-
   // Avisos para no perder el progreso
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
   const isStandalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
@@ -566,7 +560,7 @@
 
   // ---------- REPASO ----------
   // Todo es tipo test: la nota del repaso espaciado sale de tu respuesta (fallo, duda, acierto, rapidez).
-  const revUI = { tab: 'dia', filter: 'all', q: '' };
+  const revUI = { tab: 'dia' };
   let rev = null, build = null, libre = null;
   const REV_CHUNK = 20;
 
@@ -591,14 +585,15 @@
     if (revUI.tab === 'construir') body = buildBody();
     else if (revUI.tab === 'libre') body = libreBody();
     else body = diaBody();
-    paint(`${header('復習 <span class="h-es">Repaso</span>', 'Recordar es lo que fija la memoria')}${tabs}${body}`);
+    const nMine = learnedIds().length;
+    const mine = nMine ? `<a class="link-row" href="#/frases/mias">${ic('book')}<span>Mis frases <small class="muted">${nMine} aprendidas · nivel y próximo repaso</small></span><b>→</b></a>` : '';
+    paint(`${header('復習 <span class="h-es">Repaso</span>', 'Recordar es lo que fija la memoria')}${tabs}${body}${mine}`);
     view.querySelectorAll('[data-rtab]').forEach((b) => b.addEventListener('click', () => {
       revUI.tab = b.dataset.rtab; history.replaceState(null, '', '#/repaso/' + revUI.tab); renderRepaso();
     }));
     if (revUI.tab === 'construir') bindBuild();
     else if (revUI.tab === 'libre') bindLibre();
     else bindDia();
-    bindMyWords();
   }
   const rr = () => renderRepaso();
 
@@ -640,7 +635,7 @@
     const ids = Object.keys(S().srs).filter((id) => ITEMS[id]);
     const end = rev && !rev.queue.length ? endHTML(rev, keys.length ? `Quedan ${keys.length} para hoy.` : 'Lo fallado volverá pronto; lo acertado, más adelante.',
       keys.length ? `<button class="btn primary" data-act="dgo">Seguir (${Math.min(REV_CHUNK, keys.length)})</button>` : '', missedRows(rev)) : '';
-    if (end) return `${end}${myWords()}`;
+    if (end) return end;
     if (!keys.length) {
       const next = ids.length ? Math.min(...ids.map((id) => SRS.item(id).due)) - Store.today() : null;
       const otherDue = SRS.due().length;
@@ -656,7 +651,7 @@
             <div class="row-btns"><button class="btn ghost" data-rtab="construir">${ic('blocks')} Construir</button><button class="btn primary" data-rtab="libre">${ic('repeat')} Práctica libre</button></div>`
             : ids.length ? '' : '<a class="btn primary" href="#/hoy">Ir al reto de hoy</a>'}
         </div>
-        ${ids.length ? myWords() : ''}`;
+        `;
     }
     return `
       ${modeSwitch}
@@ -665,8 +660,7 @@
         <p class="muted">${keys.length === 1 ? 'pregunta pendiente' : 'preguntas pendientes'} hoy</p>
         <button class="btn primary wide" data-act="dgo">Empezar${keys.length > REV_CHUNK ? ` (${REV_CHUNK})` : ''}</button>
         <p class="muted small hint">Cada frase tiene dos memorias: <b>reconocerla</b> (leerla u oírla) y <b>decirla tú</b>. Las preguntas se ponen más difíciles a medida que la recuerdas mejor.</p>
-      </div>
-      ${myWords()}`;
+      </div>`;
   }
   function bindDia() {
     view.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => {
@@ -691,7 +685,7 @@
         ${stamp('組')}<h2>Construir frases</h2>
         <p class="muted">Ves el español y montas la frase japonesa con las piezas. Así se te queda el orden de las palabras. Las que falles volverán antes en tu repaso.</p>
         <button class="btn primary wide" data-act="bstart">Empezar (${Math.min(10, avail)} frases)</button>
-      </div>${myWords()}`;
+      </div>`;
   }
   function bindBuild() {
     on('[data-act="bstart"]', () => { startBuild(); rr(); window.scrollTo({ top: 0 }); });
@@ -699,7 +693,7 @@
 
   // --- práctica libre (fuera de calendario: fallar adelanta el repaso, acertar no cambia nada)
   const LIBRE_SRC = { weak: ['trend', 'Las que más fallo'], recent: ['clock', 'Recientes (7 días)'], random: ['shuffle', 'Al azar'] };
-  function libreKey(id) { const e = S().srs[id]; return SRS.key(id, e && e.p && Math.random() < 0.5 ? 'p' : 'r'); }
+  function libreKey(id) { const e = S().srs[id]; return SRS.key(id, e && e.p && !SRS.hearOnly(id) && Math.random() < 0.5 ? 'p' : 'r'); }
   function startLibre(src, unit) {
     const all = learnedIds();
     const ids = src === 'weak' ? SRS.weakest().filter((id) => ITEMS[id]).slice(0, 15)
@@ -723,8 +717,7 @@
         <div class="stack-btns">${Object.entries(LIBRE_SRC).map(([k, [i, l]]) => `<button class="btn ghost" data-libre="${k}">${ic(i)} ${l}</button>`).join('')}</div>
         <p class="muted small" style="margin-top:14px">Por unidad:</p>
         <div class="unit-chips">${units.map((u) => `<button class="cat" data-lunit="${u.id}">${seal(u, 'seal-sm')} ${esc(u.name)}</button>`).join('')}</div>
-      </div>
-      ${myWords()}`;
+      </div>`;
   }
   function bindLibre() {
     const go = () => { rr(); window.scrollTo({ top: 0 }); };
@@ -732,35 +725,6 @@
     view.querySelectorAll('[data-lunit]').forEach((b) => b.addEventListener('click', () => { startLibre('unit', b.dataset.lunit); go(); }));
     on('[data-act="lnew"]', () => { libre = null; rr(); });
     on('[data-act="lretry"]', () => { startLibre([...libre.missed]); go(); });
-  }
-
-  // --- mis frases
-  const FILTERS = [['all', 'Todas'], ['hard', 'Difíciles'], ['aprendiendo', 'Aprendiendo'], ['madura', 'Madura'], ['dominada', 'Dominadas']];
-  function myWords() {
-    const entries = Object.keys(S().srs).filter((id) => ITEMS[id]);
-    const t = Store.today();
-    const f = revUI.q.toLowerCase();
-    const list = entries
-      .map((id) => ({ it: ITEMS[id], c: SRS.item(id) }))
-      .filter(({ c }) => revUI.filter === 'all' || (revUI.filter === 'hard' ? c.hard : c.level === revUI.filter))
-      .filter(({ it }) => !f || [it.jp, it.kana, it.romaji, it.es].some((x) => x.toLowerCase().includes(f)))
-      .sort((a, b) => a.c.due - b.c.due);
-    return `
-      <h3 class="section-title">Mis frases <span class="muted">(${entries.length})</span></h3>
-      <div class="unit-chips">${FILTERS.map(([k, l]) => `<button class="cat ${revUI.filter === k ? 'on' : ''}" data-wf="${k}">${l}</button>`).join('')}</div>
-      <input class="search" id="wsearch" type="search" placeholder="Buscar…" value="${esc(revUI.q)}">
-      <div class="mini-list">
-        ${list.length ? list.map(({ it, c }) => miniRow(it, `<small class="lvl lvl-${c.level}">${c.hard ? 'difícil · ' : ''}${c.level}${c.hasP ? ' · producir' : ''} · ${c.due - t <= 0 ? 'hoy' : SRS.label(c.due - t)}</small>`)).join('') : '<p class="muted center small">Nada por aquí.</p>'}
-      </div>`;
-  }
-  function bindMyWords() {
-    view.querySelectorAll('[data-wf]').forEach((b) => b.addEventListener('click', () => { revUI.filter = b.dataset.wf; rr(); }));
-    const s = view.querySelector('#wsearch');
-    if (!s) return;
-    s.addEventListener('input', () => {
-      revUI.q = s.value; const pos = s.selectionStart; rr();
-      const s2 = view.querySelector('#wsearch'); if (s2) { s2.focus(); s2.setSelectionRange(pos, pos); }
-    });
   }
 
   // ---------- NÚMEROS ----------
@@ -1319,8 +1283,17 @@
   }
 
   // ---------- FRASES (biblioteca) ----------
-  const fr = { cat: 'saludos', q: '', learned: false };
-  function renderFrases() {
+  const fr = { cat: 'saludos', q: '', lvl: 'all' };
+  // Filtros por memoria (antes "Mis frases" en Repaso)
+  const LVLS = [['all', 'Todas'], ['mias', 'Aprendidas'], ['hard', 'Difíciles'], ['aprendiendo', 'Aprendiendo'], ['madura', 'Maduras'], ['dominada', 'Dominadas']];
+  function lvlMatch(it) {
+    if (fr.lvl === 'all') return true;
+    if (!S().srs[it.id]) return false;
+    const c = SRS.item(it.id);
+    return fr.lvl === 'mias' || (fr.lvl === 'hard' ? c.hard : c.level === fr.lvl);
+  }
+  function renderFrases(sub) {
+    if (sub === 'mias') { fr.lvl = 'mias'; fr.cat = 'all'; fr.q = ''; history.replaceState(null, '', '#/frases'); }
     const units = UNITS.filter(unitVisible);
     if (fr.cat !== 'all' && !units.some((u) => u.id === fr.cat)) fr.cat = 'saludos';
     const cats = [{ id: 'all', name: 'Todas', icon: '全', iconRead: 'ぜんぶ (全部) = todo' }, ...units];
@@ -1328,24 +1301,26 @@
     let list = fr.cat === 'all' ? visible : UNIT[fr.cat].items;
     const f = fr.q.trim().toLowerCase();
     if (f) list = list.filter((it) => [it.jp, it.kana, it.romaji, it.es].some((x) => x.toLowerCase().includes(f)));
-    if (fr.learned) list = list.filter((it) => S().srs[it.id]);
+    list = list.filter(lvlMatch);
+    // Con un filtro de memoria, primero las que antes vuelven al repaso
+    if (fr.lvl !== 'all') list = [...list].sort((a, b) => SRS.item(a.id).due - SRS.item(b.id).due);
     const u = UNIT[fr.cat];
     const nLearned = (u ? u.items : visible).filter((it) => S().srs[it.id]).length;
     view.innerHTML = `
-      ${header('言葉 <span class="h-es">Frases</span>', `Tu biblioteca · ${visible.length} frases y palabras`)}
+      ${header('言葉 <span class="h-es">Frases</span>', `Tu biblioteca · ${visible.length} frases`)}
       <input class="search" id="fsearch" type="search" placeholder="Buscar en japonés, romaji o español…" value="${esc(fr.q)}">
       <div class="cats">${cats.map((x) => `<button class="cat ${fr.cat === x.id ? 'on' : ''} cat-${x.kind || ''}" data-cat="${x.id}">${seal(x, 'seal-sm')} ${esc(x.name)}</button>`).join('')}</div>
       ${u ? `<p class="cat-desc">${u.iconRead ? `<span class="seal-read">${seal(u, 'seal-sm')} <span lang="ja">${esc(u.iconRead)}</span></span>` : ''}${esc(u.desc)}</p>` : ''}
       ${u && u.warn ? `<div class="tip warn">${esc(u.warn)}</div>` : ''}
-      <div class="lib-bar"><span class="muted small">${nLearned} de ${(u ? u.items : visible).length} aprendidas</span>
-        <button class="cat ${fr.learned ? 'on' : ''}" data-act="flearned">✓ Solo aprendidas</button></div>
+      <div class="lvls">${LVLS.map(([k, l]) => `<button class="cat ${fr.lvl === k ? 'on' : ''}" data-lvl="${k}">${l}</button>`).join('')}</div>
+      <p class="muted small lib-count">${fr.lvl === 'all' ? `${nLearned} de ${(u ? u.items : visible).length} aprendidas` : `${list.length} frase${list.length === 1 ? '' : 's'}`}</p>
       <div class="plist">
-        ${list.length ? list.map(phraseCard).join('') : '<p class="muted center">Sin resultados.</p>'}
+        ${list.length ? list.map(phraseCard).join('') : `<p class="muted center">${fr.lvl === 'all' ? 'Sin resultados.' : 'Ninguna frase con este filtro.'}</p>`}
       </div>`;
     const activeCat = view.querySelector('.cats .cat.on');
     if (activeCat) activeCat.parentElement.scrollLeft = activeCat.offsetLeft - 16;
     view.querySelectorAll('[data-cat]').forEach((b) => b.addEventListener('click', () => { fr.cat = b.dataset.cat; renderFrases(); }));
-    on('[data-act="flearned"]', () => { fr.learned = !fr.learned; renderFrases(); });
+    view.querySelectorAll('[data-lvl]').forEach((b) => b.addEventListener('click', () => { fr.lvl = b.dataset.lvl; renderFrases(); }));
     const s = view.querySelector('#fsearch');
     s.addEventListener('input', () => {
       fr.q = s.value; const pos = s.selectionStart;
@@ -1357,6 +1332,12 @@
       if (SRS.addItem(b.dataset.add, 0)) { Store.save(); toast('Añadida a tu repaso ✓'); haptic(); renderFrases(); }
     }));
   }
+  // Nivel de memoria y cuándo vuelve al repaso
+  function lvlLine(id) {
+    const c = SRS.item(id); const d = c.due - Store.today();
+    const txt = `${c.hard ? 'difícil · ' : ''}${c.level}${c.hasP ? ' · producir' : ''} · repaso ${d <= 0 ? 'hoy' : 'en ' + SRS.label(d)}`;
+    return `<small class="lvl lvl-${c.level}">${esc(txt[0].toUpperCase() + txt.slice(1))}</small>`;
+  }
   function phraseCard(it) {
     const inSrs = !!S().srs[it.id];
     return `
@@ -1364,8 +1345,10 @@
         <div class="pc-main">
           ${jpBlock(it, 'md')}
           <div class="pc-es">${esc(it.es)}</div>
+          ${hearTag(it)}
           ${partsBlock(it)}
           ${it.note ? `<div class="pc-note">${ic('bulb')} ${esc(it.note)}</div>` : ''}
+          ${inSrs ? lvlLine(it.id) : ''}
         </div>
         <div class="pc-actions">
           ${sayBtn(it.kana || it.jp)}

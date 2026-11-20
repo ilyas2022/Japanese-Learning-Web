@@ -6,8 +6,10 @@ Leyenda: [x] hecho · [ ] pendiente · (🔬) basado en evidencia
 
 ## ✅ Lo que ya tenemos
 ### Contenido
-- [x] 496 frases completas en 22 unidades ordenadas por utilidad (16 principales, 4 divertidas, 2 +18): sin plantillas con 〜 ni palabras sueltas
-- [x] Desglose palabra a palabra (en parte) y notas de uso
+- [x] 518 frases completas en 24 unidades ordenadas por utilidad (18 principales, 4 divertidas, 2 +18): sin plantillas con 〜 ni palabras sueltas, tampoco en las divertidas y +18
+- [x] Desglose palabra a palabra en todas las frases de 2+ palabras, y notas de uso
+- [x] Universidad y clase, y Médico y farmacia
+- [x] Frases "solo para entender" (いらっしゃいませ, 温めますか？…): se practican de oído, nunca se piden producir
 - [x] Números: 0-10, decenas, centenas, 万, 9 contadores (con días del mes), días de la semana, y práctica por tema
 - [x] Hiragana y katakana con trucos para recordarlos, combinaciones y dakuten
 ### Aprendizaje
@@ -18,12 +20,12 @@ Leyenda: [x] hecho · [ ] pendiente · (🔬) basado en evidencia
 - [x] Práctica libre (más falladas, recientes, al azar, por unidad)
 - [x] Números: 15 temas a elegir × 3 tipos de test (oír, leer, decir), en rondas sin repetir y con % de las últimas 20
 - [x] Kana: tabla, práctica por filas en ambos sentidos y leer palabras
-- [x] "Mis frases" con filtros por nivel y búsqueda
+- [x] Biblioteca (Frases) con filtros por memoria: aprendidas, difíciles, aprendiendo, maduras, dominadas; nivel y próximo repaso en cada frase
 ### Plataforma
 - [x] PWA instalable y sin conexión (service worker)
 - [x] Voz japonesa del sistema con velocidad ajustable
 - [x] Nube con código secreto (Vercel + Upstash) y exportar/importar
-- [x] Migración del progreso v1 → v2
+- [x] Sin migraciones: el progreso de las frases que cambian o desaparecen se borra al cargar
 - [x] Tema claro/oscuro, romaji opcional, contenido divertido y +18 opcional
 - [x] Avisos para instalar en iOS y para hacer copia de seguridad
 
@@ -60,7 +62,7 @@ Leyenda: [x] hecho · [ ] pendiente · (🔬) basado en evidencia
 - [x] Dificultad progresiva por memoria: reconocer (s < 3) → 50 % de oído → producir eligiendo/construyendo (s < 7) → escribir
 - [x] Pantalla de test en modo enfoque: sin cabecera ni barra, botón fijo abajo, cabe a 360×640; al acertar pasa sola; sin textos "¡Correcto!/Era:" (solo verde/rojo)
 - [x] Rondas con resumen ("8 de 10 a la primera") y "Repetir las falladas" en Repaso, Números y Kana
-- [x] Contenido v4: plantillas 〜 → frases completas, palabras sueltas → frases que las contienen; migración v3→v4 con `data/renamed.js`
+- [x] Contenido v4: plantillas 〜 → frases completas, palabras sueltas → frases que las contienen
 
 ## Fase 2c · Kana y diseño ✅
 - [x] Presentación de cada kana nuevo antes de preguntarlo; rondas mixtas (leer, reconocer, oír)
@@ -74,6 +76,17 @@ Leyenda: [x] hecho · [ ] pendiente · (🔬) basado en evidencia
 - [x] Pestañas Repaso / Nuevas / Test que se pueden pulsar; cada una guarda su avance (salir con ✕ no lo pierde)
 - [x] El test se puede hacer antes de ver todas las nuevas; tras el reto, Test es una ronda de práctica (no vuelve a añadir las frases)
 - [x] Sin frases a medias en ninguna unidad (test que rechaza 〜, ~ y huecos en japonés, romaji y español)
+
+## Fase 2e · Auditoría de contenido ✅
+- [x] Las 37 palabras sueltas que quedaban (picante, palabrotas, slang, manga, resaca) son frases completas que las contienen; se mantiene todo el contenido +18 y los insultos
+- [x] Sin significados repetidos en español (今どこ？ / どこにいる？, 行こう！ / 行くぞ！) y sin frases con el mismo audio (すみません / すみません！)
+- [x] Desglose en las 170 frases que no lo tenían: "Construir" usa fichas en japonés en todas
+- [x] Campo `'oir'` para frases que solo se oyen: sin memoria de producir, el test de Hoy las repite de oído y no salen en Construir
+- [x] Unidades nuevas: Universidad y clase (20) y Médico y farmacia (12)
+- [x] Fuera frases redundantes o de poco uso: どこにいる？ (= 今どこ？), 待って！, もう一回, おけ, 学生です, 暇, 免税できますか, なに？！, 一緒に行こう！, 笑
+- [x] Fuera las migraciones (`legacy-map.js`, `renamed.js`): más simple; el progreso de lo que cambia se pierde
+- [x] "Mis frases" sale de Repaso (estaba duplicada) y sus filtros pasan a la biblioteca
+- [x] Tests: español único, desglose obligatorio y que coincide con la frase, palabras sueltas prohibidas, borrado del progreso huérfano
 
 ## Fase 3 · Escuchar y hablar (🔬 HVPT, shadowing)
 - [ ] Repetir el audio lento/normal y alternar la voz (Kyoko/Otoya) si están disponibles
@@ -97,9 +110,10 @@ Leyenda: [x] hecho · [ ] pendiente · (🔬) basado en evidencia
 - [ ] Comprobar que el payload de sync sigue por debajo de 512 KB con el log nuevo
 
 ## Fase 6 · Contenido
-- [ ] Desglose en las frases que no lo tienen (preguntas, compras, transporte, emergencias, romántico…)
+- [x] Desglose en las frases que no lo tienen (preguntas, compras, transporte, emergencias, romántico…)
 - [ ] Contadores y números irregulares como tarjetas FSRS ("3 personas = さんにん"); hoy van por temas con % reciente
-- [ ] Más unidades útiles: médico/farmacia, trabajo, casa/alquiler, teléfono
+- [x] Más unidades útiles: universidad, médico/farmacia
+- [ ] Más unidades: trabajo, casa/alquiler, teléfono, ayuntamiento (en Japón: 区役所, 在留カード)
 - [ ] Revisar con un nativo las notas de uso de las unidades divertidas y +18
 
 ## Ideas para más adelante
@@ -126,4 +140,5 @@ Leyenda: [x] hecho · [ ] pendiente · (🔬) basado en evidencia
 - 2026-11-19 · Fase 2: escribir en romaji→kana con corrección tolerante, nota sugerida, test de Hoy en 2 rondas (reconocer → producir), construir con fichas en japonés, kana con FSRS y pendientes. 19 tests. SW `nihongo-v7`.
 - 2026-11-20 · Fase 2b: todo tipo test con nota automática y dificultad progresiva, pantalla de test sin scroll, números por temas (0-10 sin repetir, meses, días del mes, días de la semana…) con % de las últimas 20, contenido sin plantillas ni palabras sueltas (migración v4). 37 tests. SW `nihongo-v8`.
 - 2026-11-20 · Fase 2c: método de kana revisado (presentación, oído, confundibles, rapidez, fila siguiente, palabras legibles) e interfaz sin emojis (iconos SVG, sellos kanji, hanko). 41 tests. SW `nihongo-v9`.
+- 2026-11-20 · Fase 2e: auditoría de contenido (palabras sueltas → frases, duplicados, desglose completo, frases solo de oído, universidad y médico, fuera frases redundantes), sin migraciones y biblioteca con filtros por memoria. 47 tests. SW `nihongo-v11`.
 - 2026-11-20 · Fase 2d: pestañas navegables en Hoy, práctica tras el reto, traducciones sin puntos suspensivos y test de contenido para todas las unidades. 42 tests. SW `nihongo-v10`.
