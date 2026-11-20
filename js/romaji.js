@@ -116,7 +116,8 @@
     if (targets.some((t) => loose(t) === loose(got))) return { res: 'near', why: 'long', got };
     const dist = Math.min(...targets.map((t) => lev(t, got)));
     const len = Math.max(...targets.map((t) => [...t].length));
-    if (dist <= (len >= 10 ? 2 : 1)) return { res: 'near', why: 'typo', got, dist };
+    // In 1-2 kana words one different letter is another word (に vs く), not a typo
+    if (dist <= (len >= 10 ? 2 : len >= 3 ? 1 : 0)) return { res: 'near', why: 'typo', got, dist };
     return { res: 'ko', got, dist };
   }
 

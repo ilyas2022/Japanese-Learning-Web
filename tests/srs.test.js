@@ -57,7 +57,7 @@ test('migración v2 → v3 conserva todas las tarjetas y la racha', () => {
   };
   const { Store, SRS } = loadApp(v2);
   const s = Store.s;
-  assert.equal(s.v, 3);
+  assert.equal(s.v, 4); // v2 → v3 → v4
   assert.equal(Object.keys(s.srs).length, 3);
   assert.equal(s.streak.count, 12);
   assert.equal(s.kana['h:あ'].c, 3);

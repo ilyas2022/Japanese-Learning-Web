@@ -13,8 +13,10 @@ function fakeStorage(initial = {}) {
 }
 
 // saved: objeto de progreso a meter en localStorage antes de cargar (o null)
-function loadApp(saved = null) {
+// opts.content: cargar también el contenido y el mapa de renombrados (para la migración v4)
+function loadApp(saved = null, opts = {}) {
   global.window = globalThis;
+  if (opts.content) for (const f of ['data/content.js', 'data/renamed.js']) require(path.join(ROOT, f));
   globalThis.localStorage = fakeStorage(saved ? { 'nihongo-diario-v1': JSON.stringify(saved) } : {});
   delete globalThis.Sync;
   for (const f of ['js/fsrs.js', 'js/storage.js', 'js/srs.js']) {

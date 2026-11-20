@@ -1,7 +1,7 @@
 // Progreso guardado en localStorage del dispositivo.
 (function (root) {
   const KEY = 'nihongo-diario-v1';
-  const VERSION = 3;
+  const VERSION = 4;
   const DAY_START_H = 4; // el día de estudio cambia a las 4:00, no a medianoche
 
   const defaults = () => ({
@@ -12,7 +12,7 @@
     streak: { count: 0, last: null, best: 0 },
     kana: {},         // 'h:あ' -> { c, w, s }
     log: {},          // day -> { learned, reviews, ok, fail }
-    nums: {},         // modo de práctica de números -> { ok, n }
+    nums: {},         // tema de números -> { h: últimos 20 aciertos (1/0) }
     dayOffset: 0,     // solo para pruebas
   });
 
@@ -50,6 +50,7 @@
     if (from >= VERSION) return false;
     if (from < 2) migrateV1(st);
     if (from < 3) migrateV2(st);
+    if (from < 4) migrateV4(st);
     st.v = VERSION;
     return true;
   }
@@ -102,6 +103,34 @@
     st.settings = st.settings || {};
     st.settings.reviewMode = { jp: 'r', es: 'p' }[st.settings.reviewMode] || st.settings.reviewMode || 'mix';
     if (st.daily && st.daily.step === 'review') st.daily.step = 'learn';
+  }
+
+  // v3 → v4: las plantillas con 〜 y las palabras sueltas pasan a frases completas (data/renamed.js).
+  // El progreso se mueve al id nuevo con la estabilidad limitada a 3 días, para que vuelva pronto como test.
+  // Si el destino ya tenía progreso, se queda el más fuerte. Lo que ya no existe en el contenido se borra.
+  const V4_CAP_S = 3;
+  function migrateV4(st) {
+    const map = root.RENAMED || {};
+    const exists = root.ITEMS_LIST ? new Set(root.ITEMS_LIST.map((i) => i.id)) : null;
+    const t = today();
+    const cap = (c) => {
+      if (!c || c.s == null) return c ? { ...c } : c;
+      const s = Math.min(c.s, V4_CAP_S);
+      return { ...c, s, due: Math.min(c.due, t + Math.max(1, Math.round(s))) };
+    };
+    const strength = (e) => (e && e.r && e.r.s) || 0;
+    const srs = {}; let moved = 0, dropped = 0;
+    Object.entries(st.srs || {}).forEach(([id, e]) => { if (!map[id]) srs[id] = e; });
+    Object.entries(st.srs || {}).forEach(([id, e]) => {
+      const to = map[id]; if (!to || !e) return;
+      const ne = { ...e, r: cap(e.r), p: cap(e.p) || null };
+      if (!srs[to] || strength(ne) > strength(srs[to])) srs[to] = ne;
+      moved++;
+    });
+    if (exists) Object.keys(srs).forEach((id) => { if (!exists.has(id)) { delete srs[id]; dropped++; } });
+    st.srs = srs;
+    st.nums = {}; // las estadísticas de números pasan a ser por tema
+    if (moved || dropped) st.migrated = { v: 4, moved, dropped, seen: false };
   }
 
   // Número de día local (cambia a las 4:00 en tu zona horaria)

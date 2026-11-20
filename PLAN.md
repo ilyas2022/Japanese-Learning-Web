@@ -6,17 +6,17 @@ Leyenda: [x] hecho · [ ] pendiente · (🔬) basado en evidencia
 
 ## ✅ Lo que ya tenemos
 ### Contenido
-- [x] 541 frases y palabras en 22 unidades ordenadas por utilidad (16 principales, 4 divertidas, 2 +18)
+- [x] 496 frases completas en 22 unidades ordenadas por utilidad (16 principales, 4 divertidas, 2 +18): sin plantillas con 〜 ni palabras sueltas
 - [x] Desglose palabra a palabra (en parte) y notas de uso
-- [x] Números: 0-10, decenas, centenas, 万, 8 contadores y días de la semana
+- [x] Números: 0-10, decenas, centenas, 万, 9 contadores (con días del mes), días de la semana, y práctica por tema
 - [x] Hiragana y katakana con trucos para recordarlos, combinaciones y dakuten
 ### Aprendizaje
-- [x] Reto diario: repaso → nuevas (con audio) → test (significado, inverso, escucha, construir)
-- [x] Repaso espaciado SM-2 con 4 notas (Otra vez / Difícil / Bien / Fácil)
+- [x] Reto diario con pestañas Repaso · Nuevas · Test: vas y vuelves cuando quieras sin perder por dónde ibas
+- [x] Repaso espaciado tipo test con nota automática (antes: 4 botones de nota a mano)
 - [x] Repaso en modos mixto, JP→ES, ES→JP y de oído
 - [x] Construir frases con fichas (romaji)
 - [x] Práctica libre (más falladas, recientes, al azar, por unidad)
-- [x] Números: dictado, leer, precios, horas y contadores (con trampas)
+- [x] Números: 15 temas a elegir × 3 tipos de test (oír, leer, decir), en rondas sin repetir y con % de las últimas 20
 - [x] Kana: tabla, práctica por filas en ambos sentidos y leer palabras
 - [x] "Mis frases" con filtros por nivel y búsqueda
 ### Plataforma
@@ -54,6 +54,27 @@ Leyenda: [x] hecho · [ ] pendiente · (🔬) basado en evidencia
 - [x] Kana en FSRS: cada kana es una tarjeta; "dominado" = estabilidad ≥ 7 días; botón "Repasar pendientes"; los dominados antiguos se conservan
 - [x] La racha cuenta si completas el repaso del día, aunque no hagas nuevas
 
+## Fase 2b · Todo es un test ✅
+- [x] `js/quiz.js`: barajas sin repetición, nota FSRS automática, distractores no ambiguos, acierto reciente (con tests)
+- [x] Repaso del día, Libre y calentamiento de Hoy: tests (opción múltiple, oído, construir, escribir) en vez de "mostrar respuesta" + nota a mano
+- [x] Dificultad progresiva por memoria: reconocer (s < 3) → 50 % de oído → producir eligiendo/construyendo (s < 7) → escribir
+- [x] Pantalla de test en modo enfoque: sin cabecera ni barra, botón fijo abajo, cabe a 360×640; al acertar pasa sola; sin textos "¡Correcto!/Era:" (solo verde/rojo)
+- [x] Rondas con resumen ("8 de 10 a la primera") y "Repetir las falladas" en Repaso, Números y Kana
+- [x] Contenido v4: plantillas 〜 → frases completas, palabras sueltas → frases que las contienen; migración v3→v4 con `data/renamed.js`
+
+## Fase 2c · Kana y diseño ✅
+- [x] Presentación de cada kana nuevo antes de preguntarlo; rondas mixtas (leer, reconocer, oír)
+- [x] Distractores de kana confundibles (シ/ツ, ソ/ン, ぬ/め, ね/れ/わ…) y nota FSRS según rapidez (> 4 s = Difícil)
+- [x] Fila siguiente recomendada cuando dominas (≥ 80 %, 2 días) las elegidas
+- [x] Leer palabras: solo con kana ya practicados, distractores parecidos y modo Escribir; 54 préstamos útiles (konbini, レジ, ゼミ, マンション…) con falsos amigos
+- [x] Trucos en español (fuera los que dependían del inglés: key, toe, nun, axe…)
+- [x] Sin emojis: iconos SVG de línea, kanji como sello de cada unidad (挨, 食, 駅…), hanko para resultados (優 良 練 完 済 始) y confeti de pétalos
+
+## Fase 2d · Hoy navegable ✅
+- [x] Pestañas Repaso / Nuevas / Test que se pueden pulsar; cada una guarda su avance (salir con ✕ no lo pierde)
+- [x] El test se puede hacer antes de ver todas las nuevas; tras el reto, Test es una ronda de práctica (no vuelve a añadir las frases)
+- [x] Sin frases a medias en ninguna unidad (test que rechaza 〜, ~ y huecos en japonés, romaji y español)
+
 ## Fase 3 · Escuchar y hablar (🔬 HVPT, shadowing)
 - [ ] Repetir el audio lento/normal y alternar la voz (Kyoko/Otoya) si están disponibles
 - [ ] Tarjetas "solo oído" para las frases maduras (dictado: escribe lo que oyes en romaji→kana)
@@ -77,7 +98,7 @@ Leyenda: [x] hecho · [ ] pendiente · (🔬) basado en evidencia
 
 ## Fase 6 · Contenido
 - [ ] Desglose en las frases que no lo tienen (preguntas, compras, transporte, emergencias, romántico…)
-- [ ] Contadores y números irregulares como tarjetas FSRS ("3 personas = さんにん")
+- [ ] Contadores y números irregulares como tarjetas FSRS ("3 personas = さんにん"); hoy van por temas con % reciente
 - [ ] Más unidades útiles: médico/farmacia, trabajo, casa/alquiler, teléfono
 - [ ] Revisar con un nativo las notas de uso de las unidades divertidas y +18
 
@@ -103,3 +124,6 @@ Leyenda: [x] hecho · [ ] pendiente · (🔬) basado en evidencia
 - 2026-11-19 · Auditoría, investigación y creación de este plan.
 - 2026-11-19 · Fase 1: FSRS-6, memorias de reconocer/producir, migración v3, día a las 4:00, fuzz, pausa de nuevas, retención real, racha por repaso. Tests de FSRS/SRS/migración. SW `nihongo-v6`.
 - 2026-11-19 · Fase 2: escribir en romaji→kana con corrección tolerante, nota sugerida, test de Hoy en 2 rondas (reconocer → producir), construir con fichas en japonés, kana con FSRS y pendientes. 19 tests. SW `nihongo-v7`.
+- 2026-11-20 · Fase 2b: todo tipo test con nota automática y dificultad progresiva, pantalla de test sin scroll, números por temas (0-10 sin repetir, meses, días del mes, días de la semana…) con % de las últimas 20, contenido sin plantillas ni palabras sueltas (migración v4). 37 tests. SW `nihongo-v8`.
+- 2026-11-20 · Fase 2c: método de kana revisado (presentación, oído, confundibles, rapidez, fila siguiente, palabras legibles) e interfaz sin emojis (iconos SVG, sellos kanji, hanko). 41 tests. SW `nihongo-v9`.
+- 2026-11-20 · Fase 2d: pestañas navegables en Hoy, práctica tras el reto, traducciones sin puntos suspensivos y test de contenido para todas las unidades. 42 tests. SW `nihongo-v10`.
